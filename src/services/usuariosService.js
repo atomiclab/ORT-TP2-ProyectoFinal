@@ -2,8 +2,6 @@
 
 import SupaBaseConnection from "../database/supabase.cnx.js";
 
-const supabase = SupaBaseConnection.getInstance();
-
 // Función helper para mapear datos de snake_case (DB) a camelCase (API)
 function mapDbToApi(dbData) {
 	if (!dbData) return null;
@@ -29,7 +27,7 @@ function mapDbToApi(dbData) {
 export const usuariosService = {
 	async getAllUsuarios() {
 		try {
-			const { data, error } = await supabase
+			const { data, error } = await SupaBaseConnection.connect()
 				.from("usuarios")
 				.select("*")
 				.order("created_at", { ascending: false });
@@ -55,7 +53,7 @@ export const usuariosService = {
 
 	async getUsuarioById(id) {
 		try {
-			const { data, error } = await supabase
+			const { data, error } = await SupaBaseConnection.connect()
 				.from("usuarios")
 				.select("*")
 				.eq("id", id)
@@ -89,12 +87,23 @@ export const usuariosService = {
 
 	async createUsuario(usuarioData) {
 		try {
+			const supabase = SupaBaseConnection.connect();
+			
 			// Verificar si el email ya existe
-			const { data: existingUser } = await supabase
+			const { data: existingUser, error: checkError } = await supabase
 				.from("usuarios")
 				.select("id")
 				.eq("email", usuarioData.email)
 				.maybeSingle();
+
+			if (checkError && checkError.code !== "PGRST116") {
+				console.error("Error al verificar email:", checkError);
+				return {
+					success: false,
+					error: "Error al verificar email",
+					details: checkError.message,
+				};
+			}
 
 			if (existingUser) {
 				return {
@@ -128,6 +137,7 @@ export const usuariosService = {
 				.single();
 
 			if (error) {
+				console.error("Error de Supabase al crear usuario:", error);
 				// Manejar error de email duplicado
 				if (error.code === "23505") {
 					return {
@@ -136,19 +146,29 @@ export const usuariosService = {
 						code: "EMAIL_EXISTS",
 					};
 				}
+				// Manejar error de tabla no encontrada
+				if (error.code === "42P01" || error.message?.includes("relation") || error.message?.includes("does not exist")) {
+					return {
+						success: false,
+						error: "Tabla de usuarios no encontrada",
+						details: "La tabla 'usuarios' no existe en Supabase. Ejecuta el script init_db.sql primero.",
+					};
+				}
 				return {
 					success: false,
-					error: "Error al crear usuario",
+					error: "Error al crear usuario en la base de datos",
 					details: error.message,
+					code: error.code,
 				};
 			}
 
 			const mappedData = mapDbToApi(data);
 			return { success: true, data: mappedData };
 		} catch (error) {
+			console.error("Error inesperado al crear usuario:", error);
 			return {
 				success: false,
-				error: "Error al crear usuario",
+				error: "Error inesperado al crear usuario",
 				details: error.message,
 			};
 		}
@@ -156,6 +176,7 @@ export const usuariosService = {
 
 	async updateUsuario(id, usuarioData) {
 		try {
+			const supabase = SupaBaseConnection.connect();
 			// Verificar que el usuario existe
 			const existingUser = await this.getUsuarioById(id);
 			if (!existingUser.success) {
@@ -236,7 +257,10 @@ export const usuariosService = {
 				return existingUser;
 			}
 
-			const { error } = await supabase.from("usuarios").delete().eq("id", id);
+			const { error } = await SupaBaseConnection.connect()
+				.from("usuarios")
+				.delete()
+				.eq("id", id);
 
 			if (error) {
 				return {
@@ -260,7 +284,7 @@ export const usuariosService = {
 	// Buscar usuarios por email
 	async getUsuarioByEmail(email) {
 		try {
-			const { data, error } = await supabase
+			const { data, error } = await SupaBaseConnection.connect()
 				.from("usuarios")
 				.select("*")
 				.eq("email", email)

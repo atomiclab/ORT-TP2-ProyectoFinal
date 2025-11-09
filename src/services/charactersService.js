@@ -1,7 +1,5 @@
 import SupaBaseConnection from "../database/supabase.cnx.js";
 
-const supabase = SupaBaseConnection.connect();
-
 // Función helper para mapear datos de snake_case (DB) a camelCase (API)
 function mapDbToApi(dbData) {
 	if (!dbData) return null;
@@ -29,7 +27,7 @@ export const charactersService = {
 	// Obtener todos los personajes
 	async getAllCharacters() {
 		try {
-			const { data, error } = await supabase
+			const { data, error } = await SupaBaseConnection.connect()
 				.from("characters")
 				.select("*")
 				.order("created_at", { ascending: false });
@@ -56,7 +54,7 @@ export const charactersService = {
 	// Obtener un personaje por ID
 	async getCharacterById(id) {
 		try {
-			const { data, error } = await supabase
+			const { data, error } = await SupaBaseConnection.connect()
 				.from("characters")
 				.select("*")
 				.eq("id", id)
@@ -91,7 +89,7 @@ export const charactersService = {
 	// Obtener todos los personajes de un usuario
 	async getCharactersByUserId(userId) {
 		try {
-			const { data, error } = await supabase
+			const { data, error } = await SupaBaseConnection.connect()
 				.from("characters")
 				.select("*")
 				.eq("user_id", userId)
@@ -119,6 +117,7 @@ export const charactersService = {
 	// Crear un nuevo personaje
 	async createCharacter(characterData) {
 		try {
+			const supabase = SupaBaseConnection.connect();
 			// Verificar que el usuario existe
 			const { data: usuario, error: usuarioError } = await supabase
 				.from("usuarios")
@@ -177,6 +176,7 @@ export const charactersService = {
 	// Actualizar un personaje
 	async updateCharacter(id, characterData) {
 		try {
+			const supabase = SupaBaseConnection.connect();
 			// Verificar que el personaje existe
 			const existingCharacter = await this.getCharacterById(id);
 			if (!existingCharacter.success) {
@@ -249,7 +249,7 @@ export const charactersService = {
 				return existingCharacter;
 			}
 
-			const { error } = await supabase
+			const { error } = await SupaBaseConnection.connect()
 				.from("characters")
 				.delete()
 				.eq("id", id);
