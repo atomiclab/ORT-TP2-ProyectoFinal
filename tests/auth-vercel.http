@@ -1,0 +1,310 @@
+### Tests para endpoints de Autenticación JWT (Supabase) - VERCEL
+@baseURL = https://ort-tp-2-proyecto-final.vercel.app
+@contentType = application/json
+
+### Variables
+@token = 
+@email = demo@example.com
+@password = 123456
+
+###
+
+### ============================================
+### POST /api/auth/register - Registro de usuarios
+### ============================================
+
+### Registro de usuario completo
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario Demo",
+  "email": "demo@example.com",
+  "password": "123456",
+  "telefono": "555-0000",
+  "edad": 30
+}
+
+###
+
+### Registro de usuario con datos mínimos (solo email y password requeridos)
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario Mínimo",
+  "email": "minimo@example.com",
+  "password": "123456"
+}
+
+###
+
+### Registro de usuario con todos los campos
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario Completo",
+  "email": "completo@example.com",
+  "password": "password123",
+  "telefono": "555-123-4567",
+  "edad": 25
+}
+
+###
+
+### Test: Intentar registrar usuario sin email (debe fallar con 400)
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario Sin Email",
+  "password": "123456"
+}
+
+###
+
+### Test: Intentar registrar usuario sin password (debe fallar con 400)
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario Sin Password",
+  "email": "sinpassword@example.com"
+}
+
+###
+
+### Test: Intentar registrar usuario con email duplicado (debe fallar con 409)
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario Duplicado",
+  "email": "demo@example.com",
+  "password": "123456"
+}
+
+###
+
+### ============================================
+### POST /api/auth/login - Inicio de sesión
+### ============================================
+
+### Login de usuario exitoso (guardar token de la respuesta)
+# @name login
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "demo@example.com",
+  "password": "123456"
+}
+
+###
+
+### Login con otro usuario
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "completo@example.com",
+  "password": "password123"
+}
+
+###
+
+### Test: Login sin email (debe fallar con 400)
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "password": "123456"
+}
+
+###
+
+### Test: Login sin password (debe fallar con 400)
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "demo@example.com"
+}
+
+###
+
+### Test: Login con email incorrecto (debe fallar con 401)
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "noexiste@example.com",
+  "password": "123456"
+}
+
+###
+
+### Test: Login con password incorrecto (debe fallar con 401)
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "demo@example.com",
+  "password": "password_incorrecto"
+}
+
+###
+
+### Test: Login con credenciales completamente incorrectas (debe fallar con 401)
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "usuario.inexistente@example.com",
+  "password": "password_falso"
+}
+
+###
+
+### ============================================
+### GET /api/auth/profile - Perfil del usuario autenticado
+### ============================================
+
+### Obtener perfil con token válido (usar token de la respuesta del login)
+GET {{baseURL}}/api/auth/profile
+Authorization: Bearer {{login.response.body.data.token}}
+Content-Type: {{contentType}}
+
+###
+
+### Obtener perfil con token manual (copiar token de la respuesta del login)
+GET {{baseURL}}/api/auth/profile
+Authorization: Bearer REEMPLAZAR_CON_TOKEN_REAL
+Content-Type: {{contentType}}
+
+###
+
+### Test: Obtener perfil sin token (debe fallar con 401)
+GET {{baseURL}}/api/auth/profile
+Content-Type: {{contentType}}
+
+###
+
+### Test: Obtener perfil con token inválido (debe fallar con 401)
+GET {{baseURL}}/api/auth/profile
+Authorization: Bearer token.invalido.aqui
+Content-Type: {{contentType}}
+
+###
+
+### Test: Obtener perfil con token mal formateado (debe fallar con 401)
+GET {{baseURL}}/api/auth/profile
+Authorization: Bearer esto_no_es_un_token_jwt_valido
+Content-Type: {{contentType}}
+
+###
+
+### Test: Obtener perfil con token expirado (debe fallar con 401)
+GET {{baseURL}}/api/auth/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjMiLCJleHAiOjE2MDAwMDAwMDB9.token_expirado
+Content-Type: {{contentType}}
+
+###
+
+### ============================================
+### Flujo completo de autenticación
+### ============================================
+
+### PASO 1: Registrar un nuevo usuario
+# @name registerFlow
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario Flujo Completo",
+  "email": "flujo.completo@example.com",
+  "password": "123456",
+  "telefono": "555-999-8888",
+  "edad": 28
+}
+
+###
+
+### PASO 2: Login con el usuario recién registrado
+# @name loginFlow
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "flujo.completo@example.com",
+  "password": "123456"
+}
+
+###
+
+### PASO 3: Obtener perfil con el token del login
+GET {{baseURL}}/api/auth/profile
+Authorization: Bearer {{loginFlow.response.body.data.token}}
+Content-Type: {{contentType}}
+
+###
+
+### PASO 4 (Opcional): Usar el token para crear un personaje
+POST {{baseURL}}/api/characters
+Authorization: Bearer {{loginFlow.response.body.data.token}}
+Content-Type: {{contentType}}
+
+{
+  "userId": "{{registerFlow.response.body.data.user.id}}",
+  "name": "Personaje del Usuario",
+  "race": "human",
+  "class": "Warrior",
+  "hp": 100,
+  "shield": 50,
+  "level": 1,
+  "isOnline": true
+}
+
+###
+
+### ============================================
+### Notas importantes
+### ============================================
+
+### NOTA 1: Almacenamiento en Supabase
+### - Los usuarios se almacenan en Supabase (PostgreSQL)
+### - Las contraseñas se encriptan con bcryptjs antes de guardarse
+### - Los tokens JWT se generan con la información del usuario
+
+### NOTA 2: Uso de tokens
+### - Después de hacer login, copia el "token" de la respuesta
+### - Usa el token en el header: Authorization: Bearer <token>
+### - El token expira según JWT_EXPIRES_IN (por defecto 1h)
+### - Para usar el token automáticamente, usa: {{login.response.body.data.token}}
+
+### NOTA 3: Códigos de estado
+### - 200: Login exitoso, perfil obtenido
+### - 201: Usuario registrado exitosamente
+### - 400: Datos incompletos o inválidos
+### - 401: Credenciales inválidas o token no válido
+### - 403: Usuario desactivado
+### - 409: Email ya existe (registro duplicado)
+### - 500: Error interno del servidor
+
+### NOTA 4: Seguridad
+### - Las contraseñas nunca se devuelven en las respuestas
+### - Los tokens JWT contienen información del usuario (userId, email, nombre)
+### - El endpoint /api/auth/profile requiere autenticación
+### - Los usuarios inactivos no pueden hacer login (código 403)
+
+### NOTA 5: Flujo recomendado
+### 1. Registrar usuario con POST /api/auth/register
+### 2. Hacer login con POST /api/auth/login (obtener token)
+### 3. Usar el token para acceder a endpoints protegidos
+### 4. El token se puede usar hasta que expire
+
+### NOTA 6: Deployment en Vercel
+### - Esta versión apunta a: https://ort-tp-2-proyecto-final.vercel.app
+### - Los tests locales están en: auth.http
+
