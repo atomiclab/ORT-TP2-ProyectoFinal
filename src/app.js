@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import morgan from "morgan";
+import cors from "cors";
 import { productosRouter } from "./routes/productosRoutes.js";
 import { usuariosExternosRouter } from "./routes/usuariosExternosRoutes.js";
 import { usuariosRouter } from "./routes/usuariosRoutes.js";
@@ -16,6 +17,32 @@ SupaBaseConnection.connect();
 //PD: No tenemos un archivo .env pedido, pero se puede agregar para no tener que hardcodear los valores superiores.
 
 const app = express();
+
+// Configuración de CORS
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+	? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
+	: [
+			"http://localhost:5173",
+			"http://localhost:3000",
+			"http://localhost:5174",
+		];
+
+const corsOptions = {
+	origin: (origin, callback) => {
+		// Permitir requests sin origin (como mobile apps o Postman)
+		if (!origin || allowedOrigins.includes(origin)) {
+			callback(null, true);
+		} else {
+			callback(null, false);
+		}
+	},
+	credentials: true, // Permitir cookies/credenciales
+	methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+	allowedHeaders: ["Content-Type", "Authorization"],
+	optionsSuccessStatus: 200, // Para navegadores legacy que fallan con 204
+};
+
+app.use(cors(corsOptions));
 
 // Middleware para debugguear, se rompio todo intentando poner el jwt
 app.use((req, res, next) => {
