@@ -8,9 +8,8 @@ export const usuariosController = {
 			const result = await usuariosService.getAllUsuarios();
 
 			if (!result.success) {
-				const statusCode = result.code === "DB_NOT_FOUND" ? 404 : 500;
-				return response.status(statusCode).json({
-					status: statusCode,
+				return response.status(500).json({
+					status: 500,
 					error: result.error,
 					code: result.code,
 					message: "No se pudo obtener la lista de usuarios",

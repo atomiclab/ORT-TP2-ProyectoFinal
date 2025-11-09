@@ -1,32 +1,50 @@
-//Para el punto 3
+//Migrado al todo poderoso a Supabase
 
-import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { randomUUID } from "node:crypto"; //Extra, fue creado en al branch UUIDimplementation, que fue luego mergeada a la main.
+import SupaBaseConnection from "../database/supabase.cnx.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const supabase = SupaBaseConnection.getInstance();
 
-const dbPath = process.env.DB_PATH || path.join(__dirname, "../../data/usuariodb.json");
-//Como el punto 2 traemos un CSV que no tiene datos como si fuera una db de usuarios,
-//cree otro archivo que se parezca a una db de usuarios.
-//Como ambos endpoints tratarian de "usuarios", le puse usuariosdb para diferenciarlo.
+// Función helper para mapear datos de snake_case (DB) a camelCase (API)
+function mapDbToApi(dbData) {
+	if (!dbData) return null;
+	if (Array.isArray(dbData)) {
+		return dbData.map(mapDbToApi);
+	}
+	return {
+		id: dbData.id,
+		nombre: dbData.nombre,
+		email: dbData.email,
+		telefono: dbData.telefono || "",
+		edad: dbData.edad || 0,
+		activo: dbData.activo !== undefined ? dbData.activo : true,
+		fechaCreacion: dbData.fecha_creacion
+			? typeof dbData.fecha_creacion === "string"
+				? dbData.fecha_creacion.split("T")[0]
+				: new Date(dbData.fecha_creacion).toISOString().split("T")[0]
+			: new Date().toISOString().split("T")[0],
+		password: dbData.password || null,
+	};
+}
 
 export const usuariosService = {
 	async getAllUsuarios() {
 		try {
-			const data = await fs.readFile(dbPath, "utf8");
-			const usuarios = JSON.parse(data);
-			return { success: true, data: usuarios };
-		} catch (error) {
-			if (error.code === "ENOENT") {
+			const { data, error } = await supabase
+				.from("usuarios")
+				.select("*")
+				.order("created_at", { ascending: false });
+
+			if (error) {
 				return {
 					success: false,
-					error: "Base de datos no encontrada",
-					code: "DB_NOT_FOUND",
+					error: "Error al obtener usuarios",
+					details: error.message,
 				};
 			}
+
+			const mappedData = mapDbToApi(data || []);
+			return { success: true, data: mappedData };
+		} catch (error) {
 			return {
 				success: false,
 				error: "Error al leer usuarios",
@@ -37,19 +55,29 @@ export const usuariosService = {
 
 	async getUsuarioById(id) {
 		try {
-			const result = await this.getAllUsuarios();
-			if (!result.success) return result;
+			const { data, error } = await supabase
+				.from("usuarios")
+				.select("*")
+				.eq("id", id)
+				.single();
 
-			const usuario = result.data.find((u) => u.id === id);
-			if (!usuario) {
+			if (error) {
+				if (error.code === "PGRST116") {
+					return {
+						success: false,
+						error: "Usuario no encontrado",
+						code: "USER_NOT_FOUND",
+					};
+				}
 				return {
 					success: false,
-					error: "Usuario no encontrado",
-					code: "USER_NOT_FOUND",
+					error: "Error al buscar usuario",
+					details: error.message,
 				};
 			}
 
-			return { success: true, data: usuario };
+			const mappedData = mapDbToApi(data);
+			return { success: true, data: mappedData };
 		} catch (error) {
 			return {
 				success: false,
@@ -61,14 +89,14 @@ export const usuariosService = {
 
 	async createUsuario(usuarioData) {
 		try {
-			const result = await this.getAllUsuarios();
-			if (!result.success) return result;
+			// Verificar si el email ya existe
+			const { data: existingUser } = await supabase
+				.from("usuarios")
+				.select("id")
+				.eq("email", usuarioData.email)
+				.maybeSingle();
 
-			// Validar email único
-			const emailExists = result.data.some(
-				(u) => u.email === usuarioData.email,
-			);
-			if (emailExists) {
+			if (existingUser) {
 				return {
 					success: false,
 					error: "El email ya existe",
@@ -76,22 +104,47 @@ export const usuariosService = {
 				};
 			}
 
-			// Generar nuevo UUID
-			const newUsuario = {
-				id: randomUUID(),
+			// Preparar datos para insertar
+			const insertData = {
 				nombre: usuarioData.nombre,
 				email: usuarioData.email,
 				telefono: usuarioData.telefono || "",
 				edad: usuarioData.edad || 0,
-				activo: usuarioData.activo !== undefined ? usuarioData.activo : true,
-				fechaCreacion: new Date().toISOString().split("T")[0],
+				activo:
+					usuarioData.activo !== undefined ? usuarioData.activo : true,
 				password: usuarioData.password || null,
 			};
 
-			result.data.push(newUsuario);
-			await this.saveUsuarios(result.data);
+			// Solo agregar fecha_creacion si se proporciona explícitamente
+			// Si no, la BD usará el DEFAULT CURRENT_DATE
+			if (usuarioData.fechaCreacion) {
+				insertData.fecha_creacion = usuarioData.fechaCreacion;
+			}
 
-			return { success: true, data: newUsuario };
+			const { data, error } = await supabase
+				.from("usuarios")
+				.insert(insertData)
+				.select()
+				.single();
+
+			if (error) {
+				// Manejar error de email duplicado
+				if (error.code === "23505") {
+					return {
+						success: false,
+						error: "El email ya existe",
+						code: "EMAIL_EXISTS",
+					};
+				}
+				return {
+					success: false,
+					error: "Error al crear usuario",
+					details: error.message,
+				};
+			}
+
+			const mappedData = mapDbToApi(data);
+			return { success: true, data: mappedData };
 		} catch (error) {
 			return {
 				success: false,
@@ -103,27 +156,21 @@ export const usuariosService = {
 
 	async updateUsuario(id, usuarioData) {
 		try {
-			const result = await this.getAllUsuarios();
-			if (!result.success) return result;
-
-			const usuarioIndex = result.data.findIndex((u) => u.id === id);
-			if (usuarioIndex === -1) {
-				return {
-					success: false,
-					error: "Usuario no encontrado",
-					code: "USER_NOT_FOUND",
-				};
+			// Verificar que el usuario existe
+			const existingUser = await this.getUsuarioById(id);
+			if (!existingUser.success) {
+				return existingUser;
 			}
 
 			// Validar email único (si se está cambiando)
-			if (
-				usuarioData.email &&
-				usuarioData.email !== result.data[usuarioIndex].email
-			) {
-				const emailExists = result.data.some(
-					(u) => u.email === usuarioData.email && u.id !== id,
-				);
-				if (emailExists) {
+			if (usuarioData.email && usuarioData.email !== existingUser.data.email) {
+				const { data: emailCheck } = await supabase
+					.from("usuarios")
+					.select("id")
+					.eq("email", usuarioData.email)
+					.maybeSingle();
+
+				if (emailCheck) {
 					return {
 						success: false,
 						error: "El email ya existe",
@@ -132,24 +179,46 @@ export const usuariosService = {
 				}
 			}
 
-			// Actualizar usuario completo
-			const usuarioActualizado = {
-				id: id,
-				nombre: usuarioData.nombre || result.data[usuarioIndex].nombre,
-				email: usuarioData.email || result.data[usuarioIndex].email,
-				telefono: usuarioData.telefono || result.data[usuarioIndex].telefono,
-				edad: usuarioData.edad || result.data[usuarioIndex].edad,
-				activo:
-					usuarioData.activo !== undefined
-						? usuarioData.activo
-						: result.data[usuarioIndex].activo,
-				fechaCreacion: result.data[usuarioIndex].fechaCreacion,
-			};
+			// Preparar datos para actualizar
+			const updateData = {};
+			if (usuarioData.nombre !== undefined)
+				updateData.nombre = usuarioData.nombre;
+			if (usuarioData.email !== undefined) updateData.email = usuarioData.email;
+			if (usuarioData.telefono !== undefined)
+				updateData.telefono = usuarioData.telefono;
+			if (usuarioData.edad !== undefined) updateData.edad = usuarioData.edad;
+			if (usuarioData.activo !== undefined)
+				updateData.activo = usuarioData.activo;
+			if (usuarioData.fechaCreacion !== undefined)
+				updateData.fecha_creacion = usuarioData.fechaCreacion;
+			if (usuarioData.password !== undefined)
+				updateData.password = usuarioData.password;
 
-			result.data[usuarioIndex] = usuarioActualizado;
+			const { data, error } = await supabase
+				.from("usuarios")
+				.update(updateData)
+				.eq("id", id)
+				.select()
+				.single();
 
-			await this.saveUsuarios(result.data);
-			return { success: true, data: usuarioActualizado };
+			if (error) {
+				// Manejar error de email duplicado
+				if (error.code === "23505") {
+					return {
+						success: false,
+						error: "El email ya existe",
+						code: "EMAIL_EXISTS",
+					};
+				}
+				return {
+					success: false,
+					error: "Error al actualizar usuario",
+					details: error.message,
+				};
+			}
+
+			const mappedData = mapDbToApi(data);
+			return { success: true, data: mappedData };
 		} catch (error) {
 			return {
 				success: false,
@@ -161,23 +230,24 @@ export const usuariosService = {
 
 	async deleteUsuario(id) {
 		try {
-			const result = await this.getAllUsuarios();
-			if (!result.success) return result;
+			// Verificar que el usuario existe y obtener sus datos
+			const existingUser = await this.getUsuarioById(id);
+			if (!existingUser.success) {
+				return existingUser;
+			}
 
-			const usuarioIndex = result.data.findIndex((u) => u.id === id);
-			if (usuarioIndex === -1) {
+			const { error } = await supabase.from("usuarios").delete().eq("id", id);
+
+			if (error) {
 				return {
 					success: false,
-					error: "Usuario no encontrado",
-					code: "USER_NOT_FOUND",
+					error: "Error al eliminar usuario",
+					details: error.message,
 				};
 			}
 
-			const usuarioEliminado = result.data[usuarioIndex];
-			result.data.splice(usuarioIndex, 1);
-			await this.saveUsuarios(result.data);
-
-			return { success: true, data: usuarioEliminado };
+			// existingUser.data ya está mapeado por getUsuarioById
+			return { success: true, data: existingUser.data };
 		} catch (error) {
 			return {
 				success: false,
@@ -186,35 +256,33 @@ export const usuariosService = {
 			};
 		}
 	},
-	async saveUsuarios(usuarios) {
-		try {
-			await fs.writeFile(dbPath, JSON.stringify(usuarios, null, 2), "utf8");
-			return { success: true };
-		} catch (error) {
-			return {
-				success: false,
-				error: "Error al guardar usuarios",
-				details: error.message,
-			};
-		}
-	},
 
-	//Buscar usuarios por mail
+	// Buscar usuarios por email
 	async getUsuarioByEmail(email) {
 		try {
-			const result = await this.getAllUsuarios();
-			if (!result.success) return result;
+			const { data, error } = await supabase
+				.from("usuarios")
+				.select("*")
+				.eq("email", email)
+				.single();
 
-			const usuario = result.data.find((u) => u.email === email);
-			if (!usuario) {
+			if (error) {
+				if (error.code === "PGRST116") {
+					return {
+						success: false,
+						error: "Usuario no encontrado",
+						code: "USER_NOT_FOUND",
+					};
+				}
 				return {
 					success: false,
-					error: "Usuario no encontrado",
-					code: "USER_NOT_FOUND",
+					error: "Error al buscar usuario",
+					details: error.message,
 				};
 			}
 
-			return { success: true, data: usuario };
+			const mappedData = mapDbToApi(data);
+			return { success: true, data: mappedData };
 		} catch (error) {
 			return {
 				success: false,

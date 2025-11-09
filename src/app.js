@@ -5,10 +5,14 @@ import { productosRouter } from "./routes/productosRoutes.js";
 import { usuariosExternosRouter } from "./routes/usuariosExternosRoutes.js";
 import { usuariosRouter } from "./routes/usuariosRoutes.js";
 import { authRouter } from "./routes/authRoutes.js";
+import { charactersRouter } from "./routes/charactersRoutes.js";
+import SupaBaseConnection from "./database/supabase.cnx.js";
+
 
 const PORT = process.env.PORT || 3003;
 const HOST = process.env.HOST || "127.0.0.1";
 
+SupaBaseConnection.connect();
 //PD: No tenemos un archivo .env pedido, pero se puede agregar para no tener que hardcodear los valores superiores.
 
 const app = express();
@@ -23,10 +27,11 @@ app.use(morgan(process.env.LOG_LEVEL || "combined"));
 app.use(express.json());
 
 // Routes
-app.use("/api/productos", productosRouter);
-app.use("/api/usuarios-externos", usuariosExternosRouter);
+app.use("/api/productos", productosRouter); //ojo!! hay que sacarla porque no la usamos
+app.use("/api/usuarios-externos", usuariosExternosRouter); //idem, no nos interesa
 app.use("/api/usuarios", usuariosRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/characters", charactersRouter);
 
 // Ruta de prueba
 app.get("/", (_req, res) => {

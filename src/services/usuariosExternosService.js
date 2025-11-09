@@ -7,8 +7,10 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const csvPath = process.env.CSV_PATH || path.join(__dirname, "../../data/usuarios.csv");
-const externalApiUrl = process.env.EXTERNAL_API_URL || 
+const csvPath =
+	process.env.CSV_PATH || path.join(__dirname, "../../data/usuarios.csv");
+const externalApiUrl =
+	process.env.EXTERNAL_API_URL ||
 	"https://raw.githubusercontent.com/Andru-1987/csv_files_ds/refs/heads/main/Video_Games.csv";
 
 export const usuariosExternosService = {

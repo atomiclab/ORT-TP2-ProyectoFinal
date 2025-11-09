@@ -2,7 +2,8 @@
 
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "mi_secreto_super_seguro_para_el_examen";
+const JWT_SECRET =
+	process.env.JWT_SECRET || "mi_secreto_super_seguro_para_el_examen";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
 
 export const authMiddleware = {

@@ -150,17 +150,22 @@ El objetivo de este punto es que el proyecto cuente con un flujo de entrega cont
 ### ✅ Implementado
 
 * ✅ Servidor Node.js con Express.js
-* ✅ Arquitectura modular (controllers, services, routes, middleware)
+* ✅ Arquitectura modular (controllers, services, routes, middleware, models)
 * ✅ Autenticación JWT
 * ✅ Encriptación de contraseñas con bcryptjs
-* ✅ Operaciones CRUD completas de usuarios
+* ✅ Base de datos Supabase (PostgreSQL)
+* ✅ Operaciones CRUD completas de usuarios (Supabase)
+* ✅ Operaciones CRUD completas de characters/personajes (Supabase)
+* ✅ Relación uno a muchos: Usuario → Characters
+* ✅ Foreign keys y CASCADE en base de datos
 * ✅ Endpoint de productos (lectura desde JSON)
 * ✅ Endpoint de usuarios externos (consumo de API externa y almacenamiento en CSV)
 * ✅ Variables de entorno para configuración
 * ✅ Validaciones básicas de datos
 * ✅ Manejo de errores con códigos HTTP apropiados
-* ✅ Documentación de endpoints en README
+* ✅ Documentación completa de endpoints en README
 * ✅ Linting y formateo con Biome
+* ✅ Tests HTTP (archivos .http)
 
 ### 🚧 En Progreso / Pendiente
 
@@ -171,10 +176,8 @@ El objetivo de este punto es que el proyecto cuente con un flujo de entrega cont
 * ⏳ Cabeceras de seguridad (Helmet)
 * ⏳ Rate limiting
 * ⏳ Módulos de mediana/alta complejidad (más allá de CRUD básico)
-* ⏳ Migración a base de datos (actualmente usando archivos JSON/CSV)
 * ⏳ Pipeline CI/CD
 * ⏳ Despliegue en Cloud Run o Render
-* ⏳ Estructura de carpetas según sugerencia (models, repositories, config)
 
 ---
 
@@ -220,7 +223,9 @@ npm start
 - **Morgan** - Middleware de logging
 - **JWT** - Autenticación con tokens
 - **bcryptjs** - Encriptación de contraseñas
-- **UUID** - Generación de IDs únicos
+- **Supabase** - Base de datos PostgreSQL en la nube
+- **@supabase/supabase-js** - Cliente de Supabase para Node.js
+- **UUID** - Generación de IDs únicos (manejado por Supabase)
 - **Biome** - Linting y formateo de código
 
 ## 📁 Estructura del Proyecto
@@ -341,10 +346,13 @@ Consume API externa de videojuegos y almacena datos en CSV.
 
 ## 👥 **ENDPOINT 3: CRUD de Usuarios**
 
-### GET /api/usuarios
-Obtiene todos los usuarios.
+> **Base de datos:** Supabase (PostgreSQL)  
+> **Persistencia:** Los usuarios se almacenan en la tabla `usuarios` de Supabase
 
-**Respuesta (200):**
+### GET /api/usuarios
+Obtiene todos los usuarios almacenados en Supabase.
+
+**Respuesta exitosa (200):**
 ```json
 {
   "status": 200,
@@ -356,7 +364,8 @@ Obtiene todos los usuarios.
       "telefono": "123-456-7890",
       "edad": 26,
       "activo": true,
-      "fechaCreacion": "2025-01-01"
+      "fechaCreacion": "2025-01-01",
+      "password": null
     }
   ],
   "count": 1,
@@ -364,48 +373,509 @@ Obtiene todos los usuarios.
 }
 ```
 
+**Error (500):**
+```json
+{
+  "status": 500,
+  "error": "Error al obtener usuarios",
+  "message": "No se pudo obtener la lista de usuarios"
+}
+```
+
+---
+
 ### GET /api/usuarios/:id
-Obtiene un usuario por ID.
+Obtiene un usuario específico por su ID.
 
 **Parámetros:**
-- `id` (UUID): ID único del usuario
+- `id` (UUID, requerido): ID único del usuario
+
+**Respuesta exitosa (200):**
+```json
+{
+  "status": 200,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "nombre": "Juan Carlos Pérez",
+    "email": "juancarlos@example.com",
+    "telefono": "123-456-7890",
+    "edad": 26,
+    "activo": true,
+    "fechaCreacion": "2025-01-01",
+    "password": null
+  },
+  "message": "Usuario encontrado exitosamente"
+}
+```
+
+**Error usuario no encontrado (404):**
+```json
+{
+  "status": 404,
+  "error": "Usuario no encontrado",
+  "code": "USER_NOT_FOUND",
+  "message": "Usuario con ID 550e8400-e29b-41d4-a716-446655440001 no encontrado"
+}
+```
+
+---
 
 ### POST /api/usuarios
-Crea un nuevo usuario.
+Crea un nuevo usuario en Supabase.
 
-**Body:**
+**Body (JSON):**
 ```json
 {
   "nombre": "Usuario Nuevo",
   "email": "nuevo@example.com",
   "telefono": "555-999-8888",
   "edad": 30,
-  "activo": true
+  "activo": true,
+  "fechaCreacion": "2025-11-08"
 }
 ```
 
-**Respuesta (201):**
+**Campos:**
+- `nombre` (string, requerido): Nombre del usuario
+- `email` (string, requerido, único): Email del usuario
+- `telefono` (string, opcional): Teléfono del usuario
+- `edad` (number, opcional, default: 0): Edad del usuario
+- `activo` (boolean, opcional, default: true): Estado activo/inactivo
+- `fechaCreacion` (string, opcional): Fecha de creación (formato: YYYY-MM-DD). Si no se proporciona, se usa la fecha actual
+- `password` (string, opcional): Contraseña (generalmente se usa el endpoint de auth/register para esto)
+
+**Respuesta exitosa (201):**
 ```json
 {
   "status": 201,
   "data": {
-    "id": "uuid-generado",
+    "id": "996c297f-3f5c-4314-aa50-73084e475a19",
     "nombre": "Usuario Nuevo",
     "email": "nuevo@example.com",
     "telefono": "555-999-8888",
     "edad": 30,
     "activo": true,
-    "fechaCreacion": "2025-10-09"
+    "fechaCreacion": "2025-11-08",
+    "password": null
   },
   "message": "Usuario creado exitosamente"
 }
 ```
 
+**Error datos incompletos (400):**
+```json
+{
+  "status": 400,
+  "error": "Datos incompletos",
+  "message": "Nombre y email son requeridos"
+}
+```
+
+**Error email duplicado (409):**
+```json
+{
+  "status": 409,
+  "error": "El email ya existe",
+  "code": "EMAIL_EXISTS",
+  "message": "No se pudo crear el usuario"
+}
+```
+
+---
+
 ### PUT /api/usuarios/:id
-Actualiza un usuario completo.
+Actualiza un usuario existente. Permite actualización parcial (solo los campos enviados).
+
+**Parámetros:**
+- `id` (UUID, requerido): ID único del usuario
+
+**Body (JSON):**
+```json
+{
+  "nombre": "Usuario Actualizado",
+  "email": "actualizado@example.com",
+  "telefono": "555-111-2222",
+  "edad": 35,
+  "activo": false
+}
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "status": 200,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "nombre": "Usuario Actualizado",
+    "email": "actualizado@example.com",
+    "telefono": "555-111-2222",
+    "edad": 35,
+    "activo": false,
+    "fechaCreacion": "2025-01-01",
+    "password": null
+  },
+  "message": "Usuario actualizado exitosamente"
+}
+```
+
+**Error usuario no encontrado (404):**
+```json
+{
+  "status": 404,
+  "error": "Usuario no encontrado",
+  "code": "USER_NOT_FOUND",
+  "message": "No se pudo actualizar el usuario"
+}
+```
+
+**Error email duplicado (409):**
+```json
+{
+  "status": 409,
+  "error": "El email ya existe",
+  "code": "EMAIL_EXISTS",
+  "message": "No se pudo actualizar el usuario"
+}
+```
+
+---
 
 ### DELETE /api/usuarios/:id
-Elimina un usuario por ID.
+Elimina un usuario de Supabase. **Nota:** Si el usuario tiene personajes asociados, estos se eliminarán automáticamente debido a la relación CASCADE.
+
+**Parámetros:**
+- `id` (UUID, requerido): ID único del usuario
+
+**Respuesta exitosa (200):**
+```json
+{
+  "status": 200,
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "nombre": "Juan Carlos Pérez",
+    "email": "juancarlos@example.com",
+    "telefono": "123-456-7890",
+    "edad": 26,
+    "activo": true,
+    "fechaCreacion": "2025-01-01",
+    "password": null
+  },
+  "message": "Usuario eliminado exitosamente"
+}
+```
+
+**Error usuario no encontrado (404):**
+```json
+{
+  "status": 404,
+  "error": "Usuario no encontrado",
+  "code": "USER_NOT_FOUND",
+  "message": "No se pudo eliminar el usuario"
+}
+```
+
+---
+
+### GET /api/usuarios/:userId/characters
+Obtiene todos los personajes de un usuario específico (relación uno a muchos).
+
+**Parámetros:**
+- `userId` (UUID, requerido): ID único del usuario
+
+**Respuesta exitosa (200):**
+```json
+{
+  "status": 200,
+  "data": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "userId": "550e8400-e29b-41d4-a716-446655440001",
+      "createdAt": "2025-11-08T10:34:01.918Z",
+      "name": "Sherry Becker",
+      "avatar": "https://avatars.githubusercontent.com/u/42087344",
+      "race": "seagull",
+      "class": "Bacon",
+      "guild": "Fadel - Murphy",
+      "hp": 50,
+      "shield": 25,
+      "level": 10,
+      "isOnline": true,
+      "kingdom": "Cape Verde"
+    }
+  ],
+  "count": 1,
+  "message": "Personajes del usuario obtenidos exitosamente"
+}
+```
+
+---
+
+## 🎮 **ENDPOINT 4: CRUD de Characters (Personajes)**
+
+> **Base de datos:** Supabase (PostgreSQL)  
+> **Persistencia:** Los personajes se almacenan en la tabla `characters` de Supabase  
+> **Relación:** Cada personaje pertenece a un usuario (relación uno a muchos)
+
+### GET /api/characters
+Obtiene todos los personajes almacenados en Supabase.
+
+**Respuesta exitosa (200):**
+```json
+{
+  "status": 200,
+  "data": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "userId": "550e8400-e29b-41d4-a716-446655440001",
+      "createdAt": "2025-11-08T10:34:01.918Z",
+      "name": "Sherry Becker",
+      "avatar": "https://avatars.githubusercontent.com/u/42087344",
+      "race": "seagull",
+      "class": "Bacon",
+      "guild": "Fadel - Murphy",
+      "hp": 50,
+      "shield": 25,
+      "level": 10,
+      "isOnline": true,
+      "kingdom": "Cape Verde"
+    }
+  ],
+  "count": 1,
+  "message": "Personajes obtenidos exitosamente"
+}
+```
+
+**Error (500):**
+```json
+{
+  "status": 500,
+  "error": "Error al obtener personajes",
+  "message": "No se pudo obtener la lista de personajes"
+}
+```
+
+---
+
+### GET /api/characters/:id
+Obtiene un personaje específico por su ID.
+
+**Parámetros:**
+- `id` (UUID, requerido): ID único del personaje
+
+**Respuesta exitosa (200):**
+```json
+{
+  "status": 200,
+  "data": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "userId": "550e8400-e29b-41d4-a716-446655440001",
+    "createdAt": "2025-11-08T10:34:01.918Z",
+    "name": "Sherry Becker",
+    "avatar": "https://avatars.githubusercontent.com/u/42087344",
+    "race": "seagull",
+    "class": "Bacon",
+    "guild": "Fadel - Murphy",
+    "hp": 50,
+    "shield": 25,
+    "level": 10,
+    "isOnline": true,
+    "kingdom": "Cape Verde"
+  },
+  "message": "Personaje encontrado exitosamente"
+}
+```
+
+**Error personaje no encontrado (404):**
+```json
+{
+  "status": 404,
+  "error": "Personaje no encontrado",
+  "code": "CHARACTER_NOT_FOUND",
+  "message": "Personaje con ID 123e4567-e89b-12d3-a456-426614174000 no encontrado"
+}
+```
+
+---
+
+### POST /api/characters
+Crea un nuevo personaje en Supabase. **Requiere un usuario válido.**
+
+**Body (JSON):**
+```json
+{
+  "userId": "550e8400-e29b-41d4-a716-446655440001",
+  "name": "Sherry Becker",
+  "avatar": "https://avatars.githubusercontent.com/u/42087344",
+  "race": "seagull",
+  "class": "Bacon",
+  "guild": "Fadel - Murphy",
+  "hp": 50,
+  "shield": 25,
+  "level": 10,
+  "isOnline": true,
+  "kingdom": "Cape Verde"
+}
+```
+
+**Campos:**
+- `userId` (UUID, requerido): ID del usuario propietario del personaje
+- `name` (string, requerido): Nombre del personaje
+- `avatar` (string, opcional): URL del avatar del personaje
+- `race` (string, opcional): Raza del personaje
+- `class` (string, opcional): Clase del personaje
+- `guild` (string, opcional): Hermandad/Gremio del personaje
+- `hp` (number, opcional, default: 0): Puntos de vida
+- `shield` (number, opcional, default: 0): Puntos de escudo
+- `level` (number, opcional, default: 1): Nivel del personaje
+- `isOnline` (boolean, opcional, default: false): Estado online/offline
+- `kingdom` (string, opcional): Reino del personaje
+
+**Respuesta exitosa (201):**
+```json
+{
+  "status": 201,
+  "data": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "userId": "550e8400-e29b-41d4-a716-446655440001",
+    "createdAt": "2025-11-08T10:34:01.918Z",
+    "name": "Sherry Becker",
+    "avatar": "https://avatars.githubusercontent.com/u/42087344",
+    "race": "seagull",
+    "class": "Bacon",
+    "guild": "Fadel - Murphy",
+    "hp": 50,
+    "shield": 25,
+    "level": 10,
+    "isOnline": true,
+    "kingdom": "Cape Verde"
+  },
+  "message": "Personaje creado exitosamente"
+}
+```
+
+**Error datos incompletos (400):**
+```json
+{
+  "status": 400,
+  "error": "Datos incompletos",
+  "message": "Nombre y userId son requeridos"
+}
+```
+
+**Error usuario no encontrado (404):**
+```json
+{
+  "status": 404,
+  "error": "Usuario no encontrado",
+  "code": "USER_NOT_FOUND",
+  "message": "No se pudo crear el personaje"
+}
+```
+
+---
+
+### PUT /api/characters/:id
+Actualiza un personaje existente. Permite actualización parcial (solo los campos enviados).
+
+**Parámetros:**
+- `id` (UUID, requerido): ID único del personaje
+
+**Body (JSON):**
+```json
+{
+  "name": "Sherry Becker Actualizada",
+  "hp": 75,
+  "shield": 40,
+  "level": 20,
+  "isOnline": false,
+  "guild": "Fadel - Murphy - Elite"
+}
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "status": 200,
+  "data": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "userId": "550e8400-e29b-41d4-a716-446655440001",
+    "createdAt": "2025-11-08T10:34:01.918Z",
+    "name": "Sherry Becker Actualizada",
+    "avatar": "https://avatars.githubusercontent.com/u/42087344",
+    "race": "seagull",
+    "class": "Bacon",
+    "guild": "Fadel - Murphy - Elite",
+    "hp": 75,
+    "shield": 40,
+    "level": 20,
+    "isOnline": false,
+    "kingdom": "Cape Verde"
+  },
+  "message": "Personaje actualizado exitosamente"
+}
+```
+
+**Error personaje no encontrado (404):**
+```json
+{
+  "status": 404,
+  "error": "Personaje no encontrado",
+  "code": "CHARACTER_NOT_FOUND",
+  "message": "No se pudo actualizar el personaje"
+}
+```
+
+**Error usuario no encontrado (404):**
+```json
+{
+  "status": 404,
+  "error": "Usuario no encontrado",
+  "code": "USER_NOT_FOUND",
+  "message": "No se pudo actualizar el personaje"
+}
+```
+*Nota: Este error ocurre si intentas cambiar el `userId` a un usuario que no existe.*
+
+---
+
+### DELETE /api/characters/:id
+Elimina un personaje de Supabase.
+
+**Parámetros:**
+- `id` (UUID, requerido): ID único del personaje
+
+**Respuesta exitosa (200):**
+```json
+{
+  "status": 200,
+  "data": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "userId": "550e8400-e29b-41d4-a716-446655440001",
+    "createdAt": "2025-11-08T10:34:01.918Z",
+    "name": "Sherry Becker",
+    "avatar": "https://avatars.githubusercontent.com/u/42087344",
+    "race": "seagull",
+    "class": "Bacon",
+    "guild": "Fadel - Murphy",
+    "hp": 50,
+    "shield": 25,
+    "level": 10,
+    "isOnline": true,
+    "kingdom": "Cape Verde"
+  },
+  "message": "Personaje eliminado exitosamente"
+}
+```
+
+**Error personaje no encontrado (404):**
+```json
+{
+  "status": 404,
+  "error": "Personaje no encontrado",
+  "code": "CHARACTER_NOT_FOUND",
+  "message": "No se pudo eliminar el personaje"
+}
+```
 
 ---
 
@@ -580,27 +1050,36 @@ NODE_ENV=development
 JWT_SECRET=mi_secreto_super_seguro_para_el_examen_gino_tubaro_2025
 JWT_EXPIRES_IN=1h
 
-# Configuración de base de datos
-DB_PATH=./data/usuariodb.json
+# Configuración de Supabase (Base de datos PostgreSQL)
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_API_KEY=tu-api-key-de-supabase
+
+# Configuración de archivos (para productos y usuarios externos)
 PRODUCTOS_PATH=./data/productos.json
 CSV_PATH=./data/usuarios.csv
-
-# API Externa
-EXTERNAL_API_URL=https://raw.githubusercontent.com/Andru-1987/csv_files_ds/refs/heads/main/Video_Games.csv
 
 # Configuración de logging
 LOG_LEVEL=combined
 ```
 
+**Nota importante:** 
+- Los usuarios y personajes ahora se almacenan en Supabase, no en archivos JSON.
+- El archivo `usuariodb.json` ya no se utiliza para usuarios (solo para referencia histórica).
+- Asegúrate de configurar correctamente `SUPABASE_URL` y `SUPABASE_API_KEY` en tu archivo `.env`.
+
 ## 📝 **Notas de Desarrollo**
 
-- **UUID**: Todos los usuarios tienen IDs únicos generados automáticamente
+- **Base de datos**: Supabase (PostgreSQL) - Usuarios y personajes almacenados en la nube
+- **UUID**: Todos los usuarios y personajes tienen IDs únicos generados automáticamente por Supabase
+- **Relaciones**: Relación uno a muchos entre usuarios y personajes con foreign keys y CASCADE
 - **Encriptación**: Las contraseñas se almacenan encriptadas con bcryptjs
 - **JWT**: Tokens con expiración configurable via `JWT_EXPIRES_IN`
-- **Validaciones**: Email único, datos requeridos
+- **Validaciones**: Email único, datos requeridos, validación de usuarios existentes
+- **Mapeo de datos**: Conversión automática entre snake_case (BD) y camelCase (API)
 - **Logging**: Morgan configurado para logging de requests
 - **Formateo**: Biome configurado para mantener código consistente
 - **Variables de entorno**: Configuración centralizada en `.env`
+- **Archivos JSON**: Solo se usan para productos y usuarios externos (no para usuarios principales)
 
 ---
 

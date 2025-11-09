@@ -1,6 +1,15 @@
-### Para el punto 3
+### Tests para endpoints de Usuarios (Supabase)
 @baseURL = http://localhost:3003
 @contentType = application/json
+
+### Variables (actualizar con UUIDs reales después de crear usuarios)
+@userId = 550e8400-e29b-41d4-a716-446655440001
+
+###
+
+### ============================================
+### GET - Obtener usuarios
+### ============================================
 
 ### Obtener todos los usuarios
 GET {{baseURL}}/api/usuarios
@@ -8,13 +17,23 @@ Content-Type: {{contentType}}
 
 ###
 
-### Obtener usuario por ID (usar UUID real del archivo llamado usuariodb.json)
-GET {{baseURL}}/api/usuarios/550e8400-e29b-41d4-a716-446655440001
+### Obtener usuario por ID (actualizar @userId con UUID real de Supabase)
+GET {{baseURL}}/api/usuarios/{{userId}}
 Content-Type: {{contentType}}
 
 ###
 
-### Crear nuevo usuario
+### Obtener usuario con ID inexistente (debe retornar 404)
+GET {{baseURL}}/api/usuarios/00000000-0000-0000-0000-000000000000
+Content-Type: {{contentType}}
+
+###
+
+### ============================================
+### POST - Crear usuarios
+### ============================================
+
+### Crear nuevo usuario completo
 POST {{baseURL}}/api/usuarios
 Content-Type: {{contentType}}
 
@@ -23,13 +42,74 @@ Content-Type: {{contentType}}
   "email": "ana@example.com",
   "telefono": "555-123-4567",
   "edad": 28,
+  "activo": true,
+  "fechaCreacion": "2025-11-08"
+}
+
+###
+
+### Crear usuario con datos mínimos (solo nombre y email requeridos)
+POST {{baseURL}}/api/usuarios
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario Mínimo",
+  "email": "minimo@example.com"
+}
+
+###
+
+### Crear usuario sin fecha (la BD usará CURRENT_DATE)
+POST {{baseURL}}/api/usuarios
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario Sin Fecha",
+  "email": "sinfecha@example.com",
+  "telefono": "555-000-0000",
+  "edad": 25,
   "activo": true
 }
 
 ###
 
-### Actualizar usuario completo (usar UUID tmb del archivo usuariodb.json)
-PUT {{baseURL}}/api/usuarios/550e8400-e29b-41d4-a716-446655440001
+### Test: Intentar crear usuario sin nombre (debe fallar con 400)
+POST {{baseURL}}/api/usuarios
+Content-Type: {{contentType}}
+
+{
+  "email": "sinnombre@example.com"
+}
+
+###
+
+### Test: Intentar crear usuario sin email (debe fallar con 400)
+POST {{baseURL}}/api/usuarios
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Sin Email"
+}
+
+###
+
+### Test: Intentar crear usuario con email duplicado (debe fallar con 409)
+POST {{baseURL}}/api/usuarios
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario Duplicado",
+  "email": "ana@example.com"
+}
+
+###
+
+### ============================================
+### PUT - Actualizar usuarios
+### ============================================
+
+### Actualizar usuario completo (actualizar @userId con UUID real)
+PUT {{baseURL}}/api/usuarios/{{userId}}
 Content-Type: {{contentType}}
 
 {
@@ -42,18 +122,125 @@ Content-Type: {{contentType}}
 
 ###
 
-### Eliminar usuario (adios Juan carlos!)
-DELETE {{baseURL}}/api/usuarios/550e8400-e29b-41d4-a716-446655440001
+### Actualizar solo algunos campos del usuario (actualización parcial)
+PUT {{baseURL}}/api/usuarios/{{userId}}
 Content-Type: {{contentType}}
 
-### Volvemos a crear a Juan Carlos! pero su UUID es diferente al de la eliminacion.
+{
+  "nombre": "Nombre Actualizado",
+  "edad": 30
+}
+
+###
+
+### Actualizar solo el estado activo
+PUT {{baseURL}}/api/usuarios/{{userId}}
+Content-Type: {{contentType}}
+
+{
+  "activo": false
+}
+
+###
+
+### Test: Actualizar usuario con email duplicado (debe fallar con 409)
+PUT {{baseURL}}/api/usuarios/{{userId}}
+Content-Type: {{contentType}}
+
+{
+  "email": "ana@example.com"
+}
+
+###
+
+### Test: Actualizar usuario inexistente (debe retornar 404)
+PUT {{baseURL}}/api/usuarios/00000000-0000-0000-0000-000000000000
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario Inexistente"
+}
+
+###
+
+### ============================================
+### DELETE - Eliminar usuarios
+### ============================================
+
+### Eliminar usuario (actualizar @userId con UUID real)
+### NOTA: Si el usuario tiene personajes, estos se eliminarán automáticamente (CASCADE)
+DELETE {{baseURL}}/api/usuarios/{{userId}}
+Content-Type: {{contentType}}
+
+###
+
+### Test: Eliminar usuario inexistente (debe retornar 404)
+DELETE {{baseURL}}/api/usuarios/00000000-0000-0000-0000-000000000000
+Content-Type: {{contentType}}
+
+###
+
+### ============================================
+### Relación uno a muchos: Usuario → Characters
+### ============================================
+
+### Obtener todos los personajes de un usuario (actualizar @userId con UUID real)
+GET {{baseURL}}/api/usuarios/{{userId}}/characters
+Content-Type: {{contentType}}
+
+###
+
+### Obtener personajes de usuario inexistente (debe retornar lista vacía o error)
+GET {{baseURL}}/api/usuarios/00000000-0000-0000-0000-000000000000/characters
+Content-Type: {{contentType}}
+
+###
+
+### ============================================
+### Flujo completo de ejemplo
+### ============================================
+
+### 1. Crear un usuario de prueba
 POST {{baseURL}}/api/usuarios
 Content-Type: {{contentType}}
 
 {
-  "nombre": "Juan Carlos Perez",
-  "email": "juancarlos@example.com",
-  "telefono": "123-456-7890",
-  "edad": 25,
+  "nombre": "Usuario de Prueba Completo",
+  "email": "prueba.completo@example.com",
+  "telefono": "555-999-8888",
+  "edad": 30,
   "activo": true
 }
+
+###
+
+### 2. Obtener todos los usuarios (copiar el UUID del usuario creado)
+GET {{baseURL}}/api/usuarios
+Content-Type: {{contentType}}
+
+###
+
+### 3. Actualizar el usuario creado (reemplazar UUID en la URL)
+PUT {{baseURL}}/api/usuarios/REEMPLAZAR_CON_UUID_REAL
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario de Prueba Actualizado",
+  "edad": 31
+}
+
+###
+
+### 4. Eliminar el usuario de prueba (reemplazar UUID en la URL)
+DELETE {{baseURL}}/api/usuarios/REEMPLAZAR_CON_UUID_REAL
+Content-Type: {{contentType}}
+
+###
+
+### NOTA IMPORTANTE:
+### - Los usuarios ahora se almacenan en Supabase, no en archivos JSON
+### - Los UUIDs se generan automáticamente por Supabase
+### - Después de crear un usuario, copia el "id" de la respuesta
+### - Actualiza la variable @userId en la línea 6 con el UUID real
+### - O reemplaza directamente {{userId}} en las peticiones con el UUID real
+### - Si eliminas un usuario con personajes, estos se eliminarán automáticamente (CASCADE)

@@ -1,0 +1,201 @@
+### Tests para endpoints de Characters
+@baseURL = http://localhost:3003
+@contentType = application/json
+
+### Variables (actualizar con UUIDs reales después de crear usuarios y personajes)
+@userId = 550e8400-e29b-41d4-a716-446655440001
+@characterId = 00000000-0000-0000-0000-000000000000
+
+###
+
+### ============================================
+### PASO 1: Crear un usuario primero (necesario para crear personajes)
+### ============================================
+
+### Crear nuevo usuario para pruebas de personajes
+POST {{baseURL}}/api/usuarios
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Usuario de Prueba Characters",
+  "email": "test.characters@example.com",
+  "telefono": "555-999-8888",
+  "edad": 30,
+  "activo": true
+}
+
+###
+
+### Obtener todos los usuarios (para copiar el UUID del usuario creado)
+GET {{baseURL}}/api/usuarios
+Content-Type: {{contentType}}
+
+###
+### NOTA: Después de crear el usuario, copia el "id" de la respuesta
+### y actualiza la variable @userId en la línea 6, o úsalo directamente
+### en las peticiones POST de personajes reemplazando "550e8400-e29b-41d4-a716-446655440001"
+###
+
+### ============================================
+### PASO 2: Tests de Characters
+### ============================================
+
+### Obtener todos los personajes
+GET {{baseURL}}/api/characters
+Content-Type: {{contentType}}
+
+###
+
+### Obtener personaje por ID (usar UUID real después de crear uno)
+GET {{baseURL}}/api/characters/{{characterId}}
+Content-Type: {{contentType}}
+
+###
+
+### Obtener todos los personajes de un usuario (relación uno a muchos)
+GET {{baseURL}}/api/usuarios/{{userId}}/characters
+Content-Type: {{contentType}}
+
+###
+
+### Crear nuevo personaje (requiere userId válido) el userID ya esta instancido en supa
+POST {{baseURL}}/api/characters
+Content-Type: {{contentType}}
+
+{
+  "userId": "fd3d2503-3a71-4390-adc3-46f62c680e62",
+  "name": "Sherry Becker",
+  "avatar": "https://avatars.githubusercontent.com/u/42087344",
+  "race": "seagull",
+  "class": "Bacon",
+  "guild": "Fadel - Murphy",
+  "hp": 50,
+  "shield": 25,
+  "level": 10,
+  "isOnline": true,
+  "kingdom": "Cape Verde"
+}
+
+###
+
+### Crear otro personaje para el mismo usuario
+POST {{baseURL}}/api/characters
+Content-Type: {{contentType}}
+
+{
+  "userId": "550e8400-e29b-41d4-a716-446655440001",
+  "name": "Gandalf el Gris",
+  "avatar": "https://example.com/avatar/gandalf.jpg",
+  "race": "wizard",
+  "class": "Mage",
+  "guild": "Orden de los Istari",
+  "hp": 100,
+  "shield": 50,
+  "level": 50,
+  "isOnline": false,
+  "kingdom": "Middle Earth"
+}
+
+###
+
+### Actualizar personaje completo (usar UUID real del personaje creado)
+PUT {{baseURL}}/api/characters/{{characterId}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Sherry Becker Actualizada",
+  "avatar": "https://avatars.githubusercontent.com/u/42087344",
+  "race": "seagull",
+  "class": "Bacon Master",
+  "guild": "Fadel - Murphy - Elite",
+  "hp": 75,
+  "shield": 40,
+  "level": 20,
+  "isOnline": true,
+  "kingdom": "Cape Verde"
+}
+
+###
+
+### Actualizar solo algunos campos del personaje (PATCH parcial)
+PUT {{baseURL}}/api/characters/{{characterId}}
+Content-Type: {{contentType}}
+
+{
+  "hp": 100,
+  "level": 25,
+  "isOnline": false
+}
+
+###
+
+### Cambiar el usuario propietario del personaje
+PUT {{baseURL}}/api/characters/{{characterId}}
+Content-Type: {{contentType}}
+
+{
+  "userId": "550e8400-e29b-41d4-a716-446655440002"
+}
+
+###
+
+### Eliminar personaje (usar UUID real del personaje)
+DELETE {{baseURL}}/api/characters/{{characterId}}
+Content-Type: {{contentType}}
+
+###
+
+### Test: Crear personaje con datos mínimos (solo name y userId requeridos)
+POST {{baseURL}}/api/characters
+Content-Type: {{contentType}}
+
+{
+  "userId": "550e8400-e29b-41d4-a716-446655440001",
+  "name": "Personaje Mínimo"
+}
+
+###
+
+### Test: Intentar crear personaje sin userId (debe fallar)
+POST {{baseURL}}/api/characters
+Content-Type: {{contentType}}
+
+{
+  "name": "Personaje Sin Usuario"
+}
+
+###
+
+### Test: Intentar crear personaje con userId inválido (debe fallar)
+POST {{baseURL}}/api/characters
+Content-Type: {{contentType}}
+
+{
+  "userId": "00000000-0000-0000-0000-000000000000",
+  "name": "Personaje Con Usuario Inválido"
+}
+
+###
+
+### Test: Obtener personaje con ID inexistente (debe retornar 404)
+GET {{baseURL}}/api/characters/00000000-0000-0000-0000-000000000000
+Content-Type: {{contentType}}
+
+###
+
+### Test: Actualizar personaje inexistente (debe retornar 404)
+PUT {{baseURL}}/api/characters/00000000-0000-0000-0000-000000000000
+Content-Type: {{contentType}}
+
+{
+  "name": "Personaje Inexistente"
+}
+
+###
+
+### Test: Eliminar personaje inexistente (debe retornar 404)
+DELETE {{baseURL}}/api/characters/00000000-0000-0000-0000-000000000000
+Content-Type: {{contentType}}
+
+###
+
