@@ -4,8 +4,6 @@ import morgan from "morgan";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import { apiReference } from "@scalar/express-api-reference";
-import { productosRouter } from "./routes/productosRoutes.js";
-import { usuariosExternosRouter } from "./routes/usuariosExternosRoutes.js";
 import { usuariosRouter } from "./routes/usuariosRoutes.js";
 import { authRouter } from "./routes/authRoutes.js";
 import { charactersRouter } from "./routes/charactersRoutes.js";
@@ -101,8 +99,7 @@ app.use(
 );
 
 // Routes
-app.use("/api/productos", productosRouter); //ojo!! hay que sacarla porque no la usamos
-app.use("/api/usuarios-externos", usuariosExternosRouter); //idem, no nos interesa
+
 app.use("/api/usuarios", usuariosRouter);
 app.use("/api/auth", authLimiter, authRouter); // Rate limiting estricto para autenticación
 app.use("/api/characters", charactersRouter);

@@ -7,7 +7,7 @@ const options = {
 			title: "API REST - Proyecto Final TP2",
 			version: "1.0.0",
 			description:
-				"Documentación de la API REST para el proyecto final del TP2. Incluye endpoints para autenticación, usuarios, personajes y productos.",
+				"Documentación de la API REST para el proyecto final del TP2. Incluye endpoints para autenticación, usuarios y personajes",
 			contact: {
 				name: "Gino Tubaro",
 			},
