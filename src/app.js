@@ -3,12 +3,14 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
+import { apiReference } from "@scalar/express-api-reference";
 import { productosRouter } from "./routes/productosRoutes.js";
 import { usuariosExternosRouter } from "./routes/usuariosExternosRoutes.js";
 import { usuariosRouter } from "./routes/usuariosRoutes.js";
 import { authRouter } from "./routes/authRoutes.js";
 import { charactersRouter } from "./routes/charactersRoutes.js";
 import SupaBaseConnection from "./database/supabase.cnx.js";
+import { swaggerSpec } from "./config/swagger.js";
 
 
 const PORT = process.env.PORT || 3003;
@@ -81,6 +83,22 @@ app.use((req, res, next) => {
 
 app.use(morgan(process.env.LOG_LEVEL || "combined"));
 app.use(express.json());
+
+// Endpoint para servir el JSON de OpenAPI
+app.get("/api/openapi.json", (_req, res) => {
+	res.json(swaggerSpec);
+});
+
+// Documentación de la API con Scalar
+app.use(
+	"/api/docs",
+	apiReference({
+		spec: {
+			url: "/api/openapi.json",
+		},
+		theme: "purple",
+	}),
+);
 
 // Routes
 app.use("/api/productos", productosRouter); //ojo!! hay que sacarla porque no la usamos
