@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 import { productosRouter } from "./routes/productosRoutes.js";
 import { usuariosExternosRouter } from "./routes/usuariosExternosRoutes.js";
 import { usuariosRouter } from "./routes/usuariosRoutes.js";
@@ -44,6 +45,34 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Rate limiting general
+const generalLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutos
+	max: 100, // máximo 100 requests por ventana por IP
+	message: {
+		success: false,
+		error: "Demasiadas solicitudes desde esta IP, por favor intenta de nuevo más tarde.",
+	},
+	standardHeaders: true, // Retorna información del rate limit en los headers `RateLimit-*`
+	legacyHeaders: false, // Deshabilita los headers `X-RateLimit-*`
+});
+
+// Rate limiting para autenticación (más estricto)
+const authLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutos
+	max: 5, // máximo 5 intentos de login por ventana por IP
+	message: {
+		success: false,
+		error: "Demasiados intentos de autenticación desde esta IP, por favor intenta de nuevo más tarde.",
+	},
+	standardHeaders: true,
+	legacyHeaders: false,
+	skipSuccessfulRequests: true, // No cuenta requests exitosos
+});
+
+// Aplicar rate limiting general
+app.use(generalLimiter);
+
 // Middleware para debugguear, se rompio todo intentando poner el jwt
 app.use((req, res, next) => {
 	console.log(`Logging: ${req.method} ${req.originalUrl}`);
@@ -57,7 +86,7 @@ app.use(express.json());
 app.use("/api/productos", productosRouter); //ojo!! hay que sacarla porque no la usamos
 app.use("/api/usuarios-externos", usuariosExternosRouter); //idem, no nos interesa
 app.use("/api/usuarios", usuariosRouter);
-app.use("/api/auth", authRouter);
+app.use("/api/auth", authLimiter, authRouter); // Rate limiting estricto para autenticación
 app.use("/api/characters", charactersRouter);
 
 // Ruta de prueba
