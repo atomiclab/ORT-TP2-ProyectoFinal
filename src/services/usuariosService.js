@@ -21,7 +21,16 @@ function mapDbToApi(dbData) {
 				? dbData.fecha_creacion.split("T")[0]
 				: new Date(dbData.fecha_creacion).toISOString().split("T")[0]
 			: new Date().toISOString().split("T")[0],
-			password: data.password, // Incluir password para autenticación
+		// password: NO se incluye por seguridad
+	};
+}
+
+// Función helper para mapear incluyendo password (solo para uso interno en autenticación)
+function mapDbToApiWithPassword(dbData) {
+	if (!dbData) return null;
+	return {
+		...mapDbToApi(dbData),
+		password: dbData.password, // Incluir password para autenticación
 	};
 }
 
@@ -306,7 +315,8 @@ export const usuariosService = {
 				};
 			}
 
-			const mappedData = mapDbToApi(data);
+			// Usar mapDbToApiWithPassword para incluir password necesario para autenticación
+			const mappedData = mapDbToApiWithPassword(data);
 			return { success: true, data: mappedData };
 		} catch (error) {
 			return {

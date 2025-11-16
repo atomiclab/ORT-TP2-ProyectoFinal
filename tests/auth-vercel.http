@@ -1,5 +1,5 @@
 ### Tests para endpoints de Autenticación JWT (Supabase) - VERCEL
-@baseURL = https://ort-tp-2-proyecto-final.vercel.app
+@baseURL = http://127.0.0.1:3003
 @contentType = application/json
 
 ### Variables
