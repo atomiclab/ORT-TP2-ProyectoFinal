@@ -1,5 +1,37 @@
 import SupaBaseConnection from "../database/supabase.cnx.js";
 
+/**
+ * Normaliza URLs de avatares que contengan localhost
+ * Convierte URLs absolutas de localhost a rutas relativas para evitar errores de Mixed Content en producción
+ * @param {string|null|undefined} avatarUrl - URL del avatar a normalizar
+ * @returns {string|null|undefined} URL normalizada o el valor original si no necesita normalización
+ */
+function normalizeAvatarUrl(avatarUrl) {
+	if (!avatarUrl || typeof avatarUrl !== "string") {
+		return avatarUrl;
+	}
+
+	// Si la URL contiene localhost, extraer solo la ruta relativa
+	if (avatarUrl.includes("localhost")) {
+		try {
+			const url = new URL(avatarUrl);
+			// Devolver solo la ruta (pathname) como URL relativa
+			return url.pathname;
+		} catch (error) {
+			// Si falla el parsing, intentar extraer la ruta manualmente
+			const localhostMatch = avatarUrl.match(/localhost:\d+(\/.*)/);
+			if (localhostMatch) {
+				return localhostMatch[1];
+			}
+			// Si no se puede normalizar, devolver null para evitar errores
+			return null;
+		}
+	}
+
+	// Si no contiene localhost, devolver la URL tal cual
+	return avatarUrl;
+}
+
 // Función helper para mapear datos de snake_case (DB) a camelCase (API)
 function mapDbToApi(dbData) {
 	if (!dbData) return null;
@@ -11,7 +43,7 @@ function mapDbToApi(dbData) {
 		userId: dbData.user_id,
 		createdAt: dbData.created_at,
 		name: dbData.name,
-		avatar: dbData.avatar,
+		avatar: normalizeAvatarUrl(dbData.avatar),
 		race: dbData.race,
 		class: dbData.class_name,
 		guild: dbData.guild,
