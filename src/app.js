@@ -48,7 +48,7 @@ app.use(cors(corsOptions));
 
 // Rate limiting general
 const generalLimiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutos
+	windowMs: 30 * 60 * 1000, // 30 minutos
 	max: 100, // máximo 100 requests por ventana por IP
 	message: {
 		success: false,
@@ -60,8 +60,8 @@ const generalLimiter = rateLimit({
 
 // Rate limiting para autenticación (más estricto)
 const authLimiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutos
-	max: 5, // máximo 5 intentos de login por ventana por IP
+	windowMs: 30 * 60 * 1000, // 30 minutos
+	max: 20, // máximo 5 intentos de login por ventana por IP
 	message: {
 		success: false,
 		error: "Demasiados intentos de autenticación desde esta IP, por favor intenta de nuevo más tarde.",
