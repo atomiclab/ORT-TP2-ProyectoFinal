@@ -149,3 +149,36 @@ authRouter.get(
 	authMiddleware.protectRoute.bind(authMiddleware),
 	authController.getProfile,
 );
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Cierra sesión y actualiza todos los personajes del usuario a OFFLINE
+ *     tags: [Autenticación]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Logout exitoso"
+ *       401:
+ *         description: No autorizado - Token inválido o faltante
+ *       500:
+ *         description: Error interno del servidor
+ */
+authRouter.post(
+	"/logout",
+	authMiddleware.protectRoute.bind(authMiddleware),
+	authController.logout,
+);

@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { usuariosService } from "./usuariosService.js";
+import { charactersService } from "./charactersService.js";
 
 export const authService = {
 	async register(userData) {
@@ -118,6 +119,9 @@ export const authService = {
 				nombre: user.nombre,
 			});
 
+			// Actualizar todos los personajes del usuario a ONLINE
+			await charactersService.setAllCharactersOnlineByUserId(user.id);
+
 			return {
 				success: true,
 				data: {
@@ -137,6 +141,24 @@ export const authService = {
 			return {
 				success: false,
 				error: "Error en el login",
+				details: error.message,
+			};
+		}
+	},
+
+	async logout(userId) {
+		try {
+			// Actualizar todos los personajes del usuario a OFFLINE
+			await charactersService.setAllCharactersOfflineByUserId(userId);
+
+			return {
+				success: true,
+				message: "Logout exitoso",
+			};
+		} catch (error) {
+			return {
+				success: false,
+				error: "Error en el logout",
 				details: error.message,
 			};
 		}

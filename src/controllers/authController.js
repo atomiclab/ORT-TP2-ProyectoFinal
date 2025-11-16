@@ -96,4 +96,32 @@ export const authController = {
 			});
 		}
 	},
+
+	async logout(request, response) {
+		try {
+			const userId = request.user.userId;
+
+			const result = await authService.logout(userId);
+
+			if (!result.success) {
+				return response.status(500).json({
+					status: 500,
+					error: result.error,
+					message: "No se pudo cerrar sesión",
+				});
+			}
+
+			response.json({
+				status: 200,
+				message: result.message || "Logout exitoso",
+			});
+		} catch (error) {
+			console.error("Error en logout:", error);
+			response.status(500).json({
+				status: 500,
+				error: "Error interno del servidor",
+				message: error.message,
+			});
+		}
+	},
 };

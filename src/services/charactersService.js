@@ -272,5 +272,61 @@ export const charactersService = {
 			};
 		}
 	},
+
+	// Actualizar todos los personajes de un usuario a ONLINE
+	async setAllCharactersOnlineByUserId(userId) {
+		try {
+			const { data, error } = await SupaBaseConnection.connect()
+				.from("characters")
+				.update({ is_online: true })
+				.eq("user_id", userId)
+				.select();
+
+			if (error) {
+				return {
+					success: false,
+					error: "Error al actualizar estado de personajes",
+					details: error.message,
+				};
+			}
+
+			const mappedData = mapDbToApi(data || []);
+			return { success: true, data: mappedData };
+		} catch (error) {
+			return {
+				success: false,
+				error: "Error al actualizar estado de personajes",
+				details: error.message,
+			};
+		}
+	},
+
+	// Actualizar todos los personajes de un usuario a OFFLINE
+	async setAllCharactersOfflineByUserId(userId) {
+		try {
+			const { data, error } = await SupaBaseConnection.connect()
+				.from("characters")
+				.update({ is_online: false })
+				.eq("user_id", userId)
+				.select();
+
+			if (error) {
+				return {
+					success: false,
+					error: "Error al actualizar estado de personajes",
+					details: error.message,
+				};
+			}
+
+			const mappedData = mapDbToApi(data || []);
+			return { success: true, data: mappedData };
+		} catch (error) {
+			return {
+				success: false,
+				error: "Error al actualizar estado de personajes",
+				details: error.message,
+			};
+		}
+	},
 };
 
