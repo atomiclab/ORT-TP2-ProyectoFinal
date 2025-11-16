@@ -86,8 +86,9 @@ export const battlesService = {
 			const factorEscudoRetado = Math.random(); // 0 a 1
 
 			// Escudo efectivo = escudo * factor aleatorio
-			const escudoEfectivoRetador = shieldRetadorAntes * factorEscudoRetador;
-			const escudoEfectivoRetado = shieldRetadoAntes * factorEscudoRetado;
+			// Redondear hacia abajo para obtener un entero
+			const escudoEfectivoRetador = Math.floor(shieldRetadorAntes * factorEscudoRetador);
+			const escudoEfectivoRetado = Math.floor(shieldRetadoAntes * factorEscudoRetado);
 
 			// Daño efectivo = max(0, daño - escudo_efectivo)
 			// Redondear hacia abajo para obtener un entero
