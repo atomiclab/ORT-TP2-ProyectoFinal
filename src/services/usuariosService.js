@@ -21,7 +21,7 @@ function mapDbToApi(dbData) {
 				? dbData.fecha_creacion.split("T")[0]
 				: new Date(dbData.fecha_creacion).toISOString().split("T")[0]
 			: new Date().toISOString().split("T")[0],
-		// password: NO se incluye por seguridad
+			password: data.password, // Incluir password para autenticación
 	};
 }
 
