@@ -74,13 +74,28 @@ export const battlesService = {
 			const dadoRetador = Math.floor(Math.random() * 16) + 1;
 			const dadoRetado = Math.floor(Math.random() * 16) + 1;
 
-			// Guardar HP antes de la batalla
+			// Guardar HP y escudo antes de la batalla
 			const hpRetadorAntes = retador.hp;
 			const hpRetadoAntes = retado.hp;
+			const shieldRetadorAntes = retador.shield || 0;
+			const shieldRetadoAntes = retado.shield || 0;
 
-			// 6. Calcular nuevo HP: max(0, hp_actual - daño_recibido)
-			const nuevoHpRetador = Math.max(0, retador.hp - dadoRetado);
-			const nuevoHpRetado = Math.max(0, retado.hp - dadoRetador);
+			// 6. Calcular amortiguación del escudo y daño efectivo
+			// Factor aleatorio entre 0 y 1 para cada escudo
+			const factorEscudoRetador = Math.random(); // 0 a 1
+			const factorEscudoRetado = Math.random(); // 0 a 1
+
+			// Escudo efectivo = escudo * factor aleatorio
+			const escudoEfectivoRetador = shieldRetadorAntes * factorEscudoRetador;
+			const escudoEfectivoRetado = shieldRetadoAntes * factorEscudoRetado;
+
+			// Daño efectivo = max(0, daño - escudo_efectivo)
+			const dañoEfectivoRetador = Math.max(0, dadoRetado - escudoEfectivoRetador);
+			const dañoEfectivoRetado = Math.max(0, dadoRetador - escudoEfectivoRetado);
+
+			// 6.1. Calcular nuevo HP: max(0, hp_actual - daño_efectivo)
+			const nuevoHpRetador = Math.max(0, retador.hp - dañoEfectivoRetador);
+			const nuevoHpRetado = Math.max(0, retado.hp - dañoEfectivoRetado);
 
 			// 7. Actualizar HP de ambos personajes
 			const { error: errorUpdateRetador } = await supabase
@@ -214,7 +229,10 @@ export const battlesService = {
 						hpAntes: hpRetadorAntes,
 						hpDespues: nuevoHpRetador,
 						dado: dadoRetador,
-						dañoRecibido: dadoRetado,
+						dañoBrutoRecibido: dadoRetado,
+						escudo: shieldRetadorAntes,
+						escudoEfectivo: escudoEfectivoRetador,
+						dañoEfectivoRecibido: dañoEfectivoRetador,
 					},
 					retado: {
 						id: retadoId,
@@ -222,7 +240,10 @@ export const battlesService = {
 						hpAntes: hpRetadoAntes,
 						hpDespues: nuevoHpRetado,
 						dado: dadoRetado,
-						dañoRecibido: dadoRetador,
+						dañoBrutoRecibido: dadoRetador,
+						escudo: shieldRetadoAntes,
+						escudoEfectivo: escudoEfectivoRetado,
+						dañoEfectivoRecibido: dañoEfectivoRetado,
 					},
 				},
 			};
