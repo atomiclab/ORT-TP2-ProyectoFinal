@@ -90,12 +90,23 @@ export const battlesService = {
 			const escudoEfectivoRetado = shieldRetadoAntes * factorEscudoRetado;
 
 			// Daño efectivo = max(0, daño - escudo_efectivo)
-			const dañoEfectivoRetador = Math.max(0, dadoRetado - escudoEfectivoRetador);
-			const dañoEfectivoRetado = Math.max(0, dadoRetador - escudoEfectivoRetado);
+			// Redondear hacia abajo para obtener un entero
+			const dañoEfectivoRetador = Math.floor(Math.max(0, dadoRetado - escudoEfectivoRetador));
+			const dañoEfectivoRetado = Math.floor(Math.max(0, dadoRetador - escudoEfectivoRetado));
 
 			// 6.1. Calcular nuevo HP: max(0, hp_actual - daño_efectivo)
-			const nuevoHpRetador = Math.max(0, retador.hp - dañoEfectivoRetador);
-			const nuevoHpRetado = Math.max(0, retado.hp - dañoEfectivoRetado);
+			// Asegurar que sea un entero válido
+			const nuevoHpRetador = Math.floor(Math.max(0, retador.hp - dañoEfectivoRetador));
+			const nuevoHpRetado = Math.floor(Math.max(0, retado.hp - dañoEfectivoRetado));
+
+			// Validar que los valores sean números válidos
+			if (isNaN(nuevoHpRetador) || isNaN(nuevoHpRetado) || !isFinite(nuevoHpRetador) || !isFinite(nuevoHpRetado)) {
+				return {
+					success: false,
+					error: "Error al calcular los valores de HP",
+					details: "Los valores calculados no son válidos",
+				};
+			}
 
 			// 7. Actualizar HP de ambos personajes
 			const { error: errorUpdateRetador } = await supabase
@@ -104,10 +115,12 @@ export const battlesService = {
 				.eq("id", retadorId);
 
 			if (errorUpdateRetador) {
+				console.error("Error al actualizar HP del retador:", errorUpdateRetador);
+				console.error("Valor nuevoHpRetador:", nuevoHpRetador, "Tipo:", typeof nuevoHpRetador);
 				return {
 					success: false,
 					error: "Error al actualizar HP del personaje retador",
-					details: errorUpdateRetador.message,
+					details: errorUpdateRetador.message || JSON.stringify(errorUpdateRetador),
 				};
 			}
 
@@ -149,7 +162,7 @@ export const battlesService = {
 				// Calcular nuevo nivel y HP con bonus
 				nivelGanadorDespues = retador.level + 1;
 				bonusVida = Math.floor(Math.random() * (75 - 50 + 1)) + 50; // Random entre 50 y 75
-				hpGanadorDespues = nuevoHpRetador + bonusVida;
+				hpGanadorDespues = Math.floor(nuevoHpRetador + bonusVida); // Asegurar que sea entero
 
 				// Actualizar nivel y HP del ganador
 				const { error: errorUpdateGanador } = await supabase
@@ -177,7 +190,7 @@ export const battlesService = {
 				// Calcular nuevo nivel y HP con bonus
 				nivelGanadorDespues = retado.level + 1;
 				bonusVida = Math.floor(Math.random() * (75 - 50 + 1)) + 50; // Random entre 50 y 75
-				hpGanadorDespues = nuevoHpRetado + bonusVida;
+				hpGanadorDespues = Math.floor(nuevoHpRetado + bonusVida); // Asegurar que sea entero
 
 				// Actualizar nivel y HP del ganador
 				const { error: errorUpdateGanador } = await supabase
