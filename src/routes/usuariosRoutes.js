@@ -135,6 +135,42 @@ usuariosRouter.post("/", usuariosController.createUsuario); // POST /api/usuario
  *       404:
  *         description: Usuario no encontrado
  */
+/**
+ * @swagger
+ * /api/usuarios/online:
+ *   get:
+ *     summary: Obtiene todos los usuarios que tienen personajes en línea
+ *     tags: [Usuarios]
+ *     responses:
+ *       200:
+ *         description: Usuarios en línea obtenidos exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Usuario'
+ *                 count:
+ *                   type: integer
+ *                   example: 2
+ *                 message:
+ *                   type: string
+ *                   example: "Usuarios en línea obtenidos exitosamente"
+ *       500:
+ *         description: Error al obtener usuarios en línea
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+usuariosRouter.get("/online", usuariosController.getUsuariosOnline); // GET /api/usuarios/online
+
 // Rutas anidadas para personajes de usuario (relación uno a muchos) - debe ir antes de /:id
 usuariosRouter.get("/:userId/characters", charactersController.getCharactersByUserId); // GET /api/usuarios/:userId/characters
 

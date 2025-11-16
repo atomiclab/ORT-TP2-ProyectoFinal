@@ -3,6 +3,7 @@
 import SupaBaseConnection from "../database/supabase.cnx.js";
 
 // Función helper para mapear datos de snake_case (DB) a camelCase (API)
+// No incluye la contraseña por seguridad
 function mapDbToApi(dbData) {
 	if (!dbData) return null;
 	if (Array.isArray(dbData)) {
@@ -20,7 +21,7 @@ function mapDbToApi(dbData) {
 				? dbData.fecha_creacion.split("T")[0]
 				: new Date(dbData.fecha_creacion).toISOString().split("T")[0]
 			: new Date().toISOString().split("T")[0],
-		password: dbData.password || null,
+		// password: NO se incluye por seguridad
 	};
 }
 
@@ -311,6 +312,59 @@ export const usuariosService = {
 			return {
 				success: false,
 				error: "Error al buscar usuario",
+				details: error.message,
+			};
+		}
+	},
+
+	// Obtener usuarios que tienen personajes en línea
+	async getUsuariosOnline() {
+		try {
+			const supabase = SupaBaseConnection.connect();
+			
+			// Primero obtener los user_id únicos de personajes en línea
+			const { data: charactersOnline, error: charactersError } = await supabase
+				.from("characters")
+				.select("user_id")
+				.eq("is_online", true);
+
+			if (charactersError) {
+				return {
+					success: false,
+					error: "Error al obtener personajes en línea",
+					details: charactersError.message,
+				};
+			}
+
+			// Si no hay personajes en línea, retornar array vacío
+			if (!charactersOnline || charactersOnline.length === 0) {
+				return { success: true, data: [] };
+			}
+
+			// Obtener user_ids únicos
+			const uniqueUserIds = [...new Set(charactersOnline.map(c => c.user_id))];
+
+			// Obtener los usuarios correspondientes
+			const { data: usuarios, error: usuariosError } = await supabase
+				.from("usuarios")
+				.select("*")
+				.in("id", uniqueUserIds)
+				.order("created_at", { ascending: false });
+
+			if (usuariosError) {
+				return {
+					success: false,
+					error: "Error al obtener usuarios",
+					details: usuariosError.message,
+				};
+			}
+
+			const mappedData = mapDbToApi(usuarios || []);
+			return { success: true, data: mappedData };
+		} catch (error) {
+			return {
+				success: false,
+				error: "Error al obtener usuarios en línea",
 				details: error.message,
 			};
 		}

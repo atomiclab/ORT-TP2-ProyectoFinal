@@ -7,6 +7,7 @@ import { apiReference } from "@scalar/express-api-reference";
 import { usuariosRouter } from "./routes/usuariosRoutes.js";
 import { authRouter } from "./routes/authRoutes.js";
 import { charactersRouter } from "./routes/charactersRoutes.js";
+import { battlesRouter } from "./routes/battlesRoutes.js";
 import SupaBaseConnection from "./database/supabase.cnx.js";
 import { swaggerSpec } from "./config/swagger.js";
 
@@ -103,6 +104,7 @@ app.use(
 app.use("/api/usuarios", usuariosRouter);
 app.use("/api/auth", authLimiter, authRouter); // Rate limiting estricto para autenticación
 app.use("/api/characters", charactersRouter);
+app.use("/api/battle", battlesRouter);
 
 // Ruta de prueba
 app.get("/", (_req, res) => {

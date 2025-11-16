@@ -172,4 +172,33 @@ export const usuariosController = {
 			});
 		}
 	},
+
+	// GET /api/usuarios/online
+	async getUsuariosOnline(_request, response) {
+		try {
+			const result = await usuariosService.getUsuariosOnline();
+
+			if (!result.success) {
+				return response.status(500).json({
+					status: 500,
+					error: result.error,
+					message: "No se pudo obtener la lista de usuarios en línea",
+				});
+			}
+
+			response.json({
+				status: 200,
+				data: result.data,
+				count: result.data.length,
+				message: "Usuarios en línea obtenidos exitosamente",
+			});
+		} catch (error) {
+			console.error("Error al obtener usuarios en línea:", error);
+			response.status(500).json({
+				status: 500,
+				error: "Error interno del servidor",
+				message: error.message,
+			});
+		}
+	},
 };

@@ -65,6 +65,23 @@ CREATE INDEX IF NOT EXISTS idx_characters_level ON characters(level);
 CREATE INDEX IF NOT EXISTS idx_characters_is_online ON characters(is_online);
 CREATE INDEX IF NOT EXISTS idx_characters_kingdom ON characters(kingdom);
 
+-- Tabla de battles (historial de batallas)
+CREATE TABLE IF NOT EXISTS battles (
+    id_pelea UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    date_time_pelea TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    id_personaje_retador UUID NOT NULL,
+    id_personaje_retado UUID NOT NULL,
+    resultado_dados_personaje_retador INTEGER NOT NULL,
+    resultado_dados_personaje_retado INTEGER NOT NULL,
+    CONSTRAINT fk_battles_retador FOREIGN KEY (id_personaje_retador) REFERENCES characters(id) ON DELETE CASCADE,
+    CONSTRAINT fk_battles_retado FOREIGN KEY (id_personaje_retado) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+-- Índices para battles
+CREATE INDEX IF NOT EXISTS idx_battles_retador ON battles(id_personaje_retador);
+CREATE INDEX IF NOT EXISTS idx_battles_retado ON battles(id_personaje_retado);
+CREATE INDEX IF NOT EXISTS idx_battles_date_time ON battles(date_time_pelea);
+
 -- Función para actualizar updated_at automáticamente
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -94,6 +111,7 @@ CREATE TRIGGER update_characters_updated_at
 COMMENT ON TABLE usuarios IS 'Tabla de usuarios del sistema';
 COMMENT ON TABLE productos IS 'Tabla de productos del catálogo';
 COMMENT ON TABLE characters IS 'Tabla de personajes del juego';
+COMMENT ON TABLE battles IS 'Historial de batallas entre personajes';
 
 COMMENT ON COLUMN usuarios.id IS 'ID único del usuario (UUID)';
 COMMENT ON COLUMN usuarios.email IS 'Email único del usuario';
@@ -106,3 +124,10 @@ COMMENT ON COLUMN characters.id IS 'ID único del personaje (UUID)';
 COMMENT ON COLUMN characters.user_id IS 'ID del usuario propietario del personaje (Foreign Key a usuarios)';
 COMMENT ON COLUMN characters.class_name IS 'Clase del personaje (class es palabra reservada)';
 COMMENT ON COLUMN characters.is_online IS 'Indica si el personaje está online';
+
+COMMENT ON COLUMN battles.id_pelea IS 'ID único de la pelea (UUID)';
+COMMENT ON COLUMN battles.date_time_pelea IS 'Fecha y hora en que ocurrió la pelea';
+COMMENT ON COLUMN battles.id_personaje_retador IS 'ID del personaje que inició la pelea (Foreign Key a characters)';
+COMMENT ON COLUMN battles.id_personaje_retado IS 'ID del personaje que fue retado (Foreign Key a characters)';
+COMMENT ON COLUMN battles.resultado_dados_personaje_retador IS 'Resultado de los dados del personaje retador (1-16)';
+COMMENT ON COLUMN battles.resultado_dados_personaje_retado IS 'Resultado de los dados del personaje retado (1-16)';
