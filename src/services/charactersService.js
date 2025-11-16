@@ -144,7 +144,7 @@ export const charactersService = {
 				hp: characterData.hp || 0,
 				shield: characterData.shield || 0,
 				level: characterData.level || 1,
-				is_online: characterData.isOnline !== undefined ? characterData.isOnline : false,
+				is_online: characterData.isOnline !== undefined ? characterData.isOnline : true,
 				kingdom: characterData.kingdom || null,
 			};
 
