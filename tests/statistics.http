@@ -1,0 +1,92 @@
+### Tests para endpoint de Estadísticas Públicas
+@baseURL = http://localhost:3003
+@contentType = application/json
+
+###
+
+### ============================================
+### GET /api/statistics - Obtener estadísticas públicas
+### ============================================
+
+### Obtener todas las estadísticas públicas del sistema
+### Este endpoint es público y no requiere autenticación
+GET {{baseURL}}/api/statistics
+Content-Type: {{contentType}}
+
+###
+
+### Test: Verificar que el endpoint devuelve estructura correcta
+### Debe incluir: totales, leaderboard, razas, clases, reinos, guilds, metricas
+GET {{baseURL}}/api/statistics
+Content-Type: {{contentType}}
+
+###
+
+### Test: Verificar respuesta con datos vacíos (si no hay datos en la BD)
+GET {{baseURL}}/api/statistics
+Content-Type: {{contentType}}
+
+###
+
+### ============================================
+### Ejemplo de respuesta esperada:
+### ============================================
+### {
+###   "status": 200,
+###   "data": {
+###     "totales": {
+###       "usuarios": 100,
+###       "personajes": 250,
+###       "batallas": 500
+###     },
+###     "leaderboard": {
+###       "usuariosMasBatallas": [
+###         {
+###           "usuarioId": "uuid",
+###           "nombre": "Usuario 1",
+###           "email": "usuario1@example.com",
+###           "totalBatallas": 50
+###         }
+###       ],
+###       "usuariosMasPersonajes": [
+###         {
+###           "usuarioId": "uuid",
+###           "nombre": "Usuario 2",
+###           "email": "usuario2@example.com",
+###           "totalPersonajes": 10
+###         }
+###       ]
+###     },
+###     "razas": [
+###       {
+###         "race": "elf",
+###         "cantidad": 50
+###       }
+###     ],
+###     "clases": [
+###       {
+###         "clase": "warrior",
+###         "cantidad": 75
+###       }
+###     ],
+###     "reinos": [
+###       {
+###         "reino": "Reino del Norte",
+###         "cantidad": 30
+###       }
+###     ],
+###     "guilds": [
+###       {
+###         "guild": "Guild de Héroes",
+###         "cantidad": 25
+###       }
+###     ],
+###     "metricas": {
+###       "promedioNivel": 15.5,
+###       "personajesOnline": 45,
+###       "personajesOffline": 205
+###     }
+###   },
+###   "message": "Estadísticas obtenidas exitosamente"
+### }
+###

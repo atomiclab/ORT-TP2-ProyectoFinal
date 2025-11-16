@@ -115,6 +115,73 @@ export const battlesService = {
 				};
 			}
 
+			// 7.5. Verificar si hubo un asesinato y aplicar recompensas al ganador
+			let ganadorId = null;
+			let ganadorName = null;
+			let nivelGanadorAntes = null;
+			let hpGanadorAntes = null;
+			let nivelGanadorDespues = null;
+			let hpGanadorDespues = null;
+			let bonusVida = null;
+
+			if (nuevoHpRetado === 0) {
+				// El retador ganó (mató al retado)
+				ganadorId = retadorId;
+				ganadorName = retador.name;
+				nivelGanadorAntes = retador.level;
+				hpGanadorAntes = nuevoHpRetador;
+				
+				// Calcular nuevo nivel y HP con bonus
+				nivelGanadorDespues = retador.level + 1;
+				bonusVida = Math.floor(Math.random() * (75 - 50 + 1)) + 50; // Random entre 50 y 75
+				hpGanadorDespues = nuevoHpRetador + bonusVida;
+
+				// Actualizar nivel y HP del ganador
+				const { error: errorUpdateGanador } = await supabase
+					.from("characters")
+					.update({ 
+						level: nivelGanadorDespues,
+						hp: hpGanadorDespues
+					})
+					.eq("id", ganadorId);
+
+				if (errorUpdateGanador) {
+					return {
+						success: false,
+						error: "Error al actualizar recompensas del ganador",
+						details: errorUpdateGanador.message,
+					};
+				}
+			} else if (nuevoHpRetador === 0) {
+				// El retado ganó (mató al retador)
+				ganadorId = retadoId;
+				ganadorName = retado.name;
+				nivelGanadorAntes = retado.level;
+				hpGanadorAntes = nuevoHpRetado;
+				
+				// Calcular nuevo nivel y HP con bonus
+				nivelGanadorDespues = retado.level + 1;
+				bonusVida = Math.floor(Math.random() * (75 - 50 + 1)) + 50; // Random entre 50 y 75
+				hpGanadorDespues = nuevoHpRetado + bonusVida;
+
+				// Actualizar nivel y HP del ganador
+				const { error: errorUpdateGanador } = await supabase
+					.from("characters")
+					.update({ 
+						level: nivelGanadorDespues,
+						hp: hpGanadorDespues
+					})
+					.eq("id", ganadorId);
+
+				if (errorUpdateGanador) {
+					return {
+						success: false,
+						error: "Error al actualizar recompensas del ganador",
+						details: errorUpdateGanador.message,
+					};
+				}
+			}
+
 			// 8. Guardar registro en la tabla battles
 			const { data: battleData, error: errorBattle } = await supabase
 				.from("battles")
@@ -136,7 +203,7 @@ export const battlesService = {
 			}
 
 			// Retornar resultado exitoso con detalles de la batalla
-			return {
+			const resultado = {
 				success: true,
 				data: {
 					battleId: battleData.id_pelea,
@@ -159,6 +226,21 @@ export const battlesService = {
 					},
 				},
 			};
+
+			// Agregar información del ganador si hubo un asesinato
+			if (ganadorId) {
+				resultado.data.ganador = {
+					id: ganadorId,
+					name: ganadorName,
+					nivelAntes: nivelGanadorAntes,
+					nivelDespues: nivelGanadorDespues,
+					hpAntes: hpGanadorAntes,
+					hpDespues: hpGanadorDespues,
+					bonusVida: bonusVida,
+				};
+			}
+
+			return resultado;
 		} catch (error) {
 			return {
 				success: false,
