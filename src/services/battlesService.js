@@ -81,9 +81,9 @@ export const battlesService = {
 			const shieldRetadoAntes = retado.shield || 0;
 
 			// 6. Calcular amortiguación del escudo y daño efectivo
-			// Factor aleatorio entre 0 y 1 para cada escudo
-			const factorEscudoRetador = Math.random(); // 0 a 1
-			const factorEscudoRetado = Math.random(); // 0 a 1
+			// Factor aleatorio entre 0 y 0.2 para cada escudo
+			const factorEscudoRetador = Math.random() * 0.2; // 0 a 0.2
+			const factorEscudoRetado = Math.random() * 0.2; // 0 a 0.2
 
 			// Escudo efectivo = escudo * factor aleatorio
 			// Redondear hacia abajo para obtener un entero
