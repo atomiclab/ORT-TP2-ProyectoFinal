@@ -176,7 +176,7 @@ export const charactersService = {
 				hp: characterData.hp || 0,
 				shield: characterData.shield || 0,
 				level: characterData.level || 1,
-				is_online: characterData.isOnline !== undefined ? characterData.isOnline : true,
+				is_online: true, // Los personajes siempre se crean con estado online
 				kingdom: characterData.kingdom || null,
 			};
 
