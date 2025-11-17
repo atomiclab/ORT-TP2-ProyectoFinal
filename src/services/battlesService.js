@@ -1,6 +1,64 @@
 import SupaBaseConnection from "../database/supabase.cnx.js";
 import { charactersService } from "./charactersService.js";
 
+/**
+ * Tabla de ventajas de razas en combate
+ * "vida" = +20% daño directo a la vida
+ * "escudo" = +25% daño al escudo
+ * "normal" = sin ventaja
+ */
+const RACE_ADVANTAGES = {
+	// Orcos: brutales y fuertes, ventaja contra Humanos y Elfos
+	orco: {
+		humano: "vida",
+		elfo: "vida",
+	},
+	// Enanos: expertos defensivos, daño extra al escudo
+	enano: {
+		orco: "escudo",
+		elfo: "escudo",
+		humano: "escudo",
+		tiefling: "escudo",
+		semielfo: "escudo",
+		enano: "escudo", // Incluso contra otros enanos
+	},
+	// Elfos: ágiles y mágicos, ventaja contra razas demoníacas/sanguíneas
+	elfo: {
+		tiefling: "vida",
+	},
+	// Tiefling: magia oscura, ventaja contra Humanos y Semielfos
+	tiefling: {
+		humano: "vida",
+		semielfo: "vida",
+	},
+	// Semielfos: adaptabilidad, sin ventajas especiales
+	semielfo: {},
+	// Humanos: equilibrados, sin ventajas sobresalientes
+	humano: {},
+};
+
+/**
+ * Obtiene la ventaja de combate entre dos razas
+ * @param {string} razaAtacante - Raza del personaje que ataca
+ * @param {string} razaDefensor - Raza del personaje que defiende
+ * @returns {string} "vida", "escudo" o "normal"
+ */
+function getRaceAdvantage(razaAtacante, razaDefensor) {
+	if (!razaAtacante || !razaDefensor) return "normal";
+
+	// Normalizar nombres de razas a minúsculas para comparación
+	const razaAtacanteNorm = razaAtacante.toLowerCase().trim();
+	const razaDefensorNorm = razaDefensor.toLowerCase().trim();
+
+	// Buscar ventaja en la tabla
+	const ventajas = RACE_ADVANTAGES[razaAtacanteNorm];
+	if (ventajas && ventajas[razaDefensorNorm]) {
+		return ventajas[razaDefensorNorm];
+	}
+
+	return "normal";
+}
+
 export const battlesService = {
 	/**
 	 * Realiza una batalla entre dos personajes
@@ -80,6 +138,10 @@ export const battlesService = {
 			const shieldRetadorAntes = retador.shield || 0;
 			const shieldRetadoAntes = retado.shield || 0;
 
+			// 5.5. Obtener ventajas de razas
+			const ventajaRetador = getRaceAdvantage(retador.race, retado.race);
+			const ventajaRetado = getRaceAdvantage(retado.race, retador.race);
+
 			// 6. Calcular amortiguación del escudo y daño efectivo
 			// Factor aleatorio entre 0 y 0.2 para cada escudo
 			const factorEscudoRetador = Math.random() * 0.2; // 0 a 0.2
@@ -90,10 +152,47 @@ export const battlesService = {
 			const escudoEfectivoRetador = Math.floor(shieldRetadorAntes * factorEscudoRetador);
 			const escudoEfectivoRetado = Math.floor(shieldRetadoAntes * factorEscudoRetado);
 
-			// Daño efectivo = max(0, daño - escudo_efectivo)
+			// Calcular daño bruto considerando ventaja "escudo" (+25% daño al escudo)
+			let dañoContraEscudoRetador = dadoRetado;
+			let dañoContraEscudoRetado = dadoRetador;
+
+			// Aplicar ventaja "escudo" si corresponde (+25% daño al escudo)
+			if (ventajaRetado === "escudo" && shieldRetadorAntes > 0) {
+				// El retado tiene ventaja contra el escudo del retador
+				// Aumentar el daño al escudo en 25%
+				dañoContraEscudoRetador = Math.floor(dadoRetado * 1.25);
+			}
+
+			if (ventajaRetador === "escudo" && shieldRetadoAntes > 0) {
+				// El retador tiene ventaja contra el escudo del retado
+				// Aumentar el daño al escudo en 25%
+				dañoContraEscudoRetado = Math.floor(dadoRetador * 1.25);
+			}
+
+			// Daño efectivo = max(0, daño_contra_escudo - escudo_efectivo)
 			// Redondear hacia abajo para obtener un entero
-			const dañoEfectivoRetador = Math.floor(Math.max(0, dadoRetado - escudoEfectivoRetador));
-			const dañoEfectivoRetado = Math.floor(Math.max(0, dadoRetador - escudoEfectivoRetado));
+			let dañoEfectivoRetador = Math.floor(Math.max(0, dañoContraEscudoRetador - escudoEfectivoRetador));
+			let dañoEfectivoRetado = Math.floor(Math.max(0, dañoContraEscudoRetado - escudoEfectivoRetado));
+
+			// Aplicar ventaja "vida" si corresponde (+20% daño directo a la vida)
+			let dañoExtraVidaRetador = 0;
+			let dañoExtraVidaRetado = 0;
+
+			if (ventajaRetado === "vida") {
+				// El retado tiene ventaja de daño directo a la vida del retador
+				dañoExtraVidaRetador = Math.floor(dañoEfectivoRetador * 0.20);
+				dañoEfectivoRetador = dañoEfectivoRetador + dañoExtraVidaRetador;
+			}
+
+			if (ventajaRetador === "vida") {
+				// El retador tiene ventaja de daño directo a la vida del retado
+				dañoExtraVidaRetado = Math.floor(dañoEfectivoRetado * 0.20);
+				dañoEfectivoRetado = dañoEfectivoRetado + dañoExtraVidaRetado;
+			}
+
+			// Asegurar que los valores finales sean enteros
+			dañoEfectivoRetador = Math.floor(dañoEfectivoRetador);
+			dañoEfectivoRetado = Math.floor(dañoEfectivoRetado);
 
 			// 6.1. Calcular nuevo HP: max(0, hp_actual - daño_efectivo)
 			// Asegurar que sea un entero válido
@@ -240,6 +339,7 @@ export const battlesService = {
 					retador: {
 						id: retadorId,
 						name: retador.name,
+						race: retador.race,
 						hpAntes: hpRetadorAntes,
 						hpDespues: nuevoHpRetador,
 						dado: dadoRetador,
@@ -247,10 +347,13 @@ export const battlesService = {
 						escudo: shieldRetadorAntes,
 						escudoEfectivo: escudoEfectivoRetador,
 						dañoEfectivoRecibido: dañoEfectivoRetador,
+						ventajaAplicada: ventajaRetador,
+						dañoExtraVida: dañoExtraVidaRetado,
 					},
 					retado: {
 						id: retadoId,
 						name: retado.name,
+						race: retado.race,
 						hpAntes: hpRetadoAntes,
 						hpDespues: nuevoHpRetado,
 						dado: dadoRetado,
@@ -258,6 +361,8 @@ export const battlesService = {
 						escudo: shieldRetadoAntes,
 						escudoEfectivo: escudoEfectivoRetado,
 						dañoEfectivoRecibido: dañoEfectivoRetado,
+						ventajaAplicada: ventajaRetado,
+						dañoExtraVida: dañoExtraVidaRetador,
 					},
 				},
 			};
