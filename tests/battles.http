@@ -3,9 +3,9 @@
 @contentType = application/json
 
 ### Variables (actualizar después de ejecutar los pasos previos)
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NWQyNzZmZC00NTRiLTQwNmMtODJkZi00MGNjOWQ1Y2ZjNGQiLCJlbWFpbCI6Imd1ZXJyZXJvQHRlc3QuY29tIiwibm9tYnJlIjoiR3VlcnJlcm8gZGUgQmF0YWxsYSIsImlhdCI6MTc2MzU4ODA1OSwiZXhwIjoxNzYzNTkxNjU5fQ.QrZZTcEOUTh50yINk4hWivW7RgenuQsNIhkLAY6XT-s
-@characterId1 = 0dda5caa-dbb7-4306-9e0a-a459e64c90c7
-@characterId2 = 
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJhMzBjN2U1MC1iYmFiLTRiNjEtYWQ0Ny0wNGY0NDdhNjA5MzEiLCJlbWFpbCI6Imx1Y2FzQGdtYWlsLmNvbSIsIm5vbWJyZSI6Ikx1Y2FzIiwiaWF0IjoxNzYzNTg4NDAwLCJleHAiOjE3NjM1OTIwMDB9.bfGwc68zFTGFIdCcZnb3LNs_tYADDd3JMFovrmyd7Z4
+@characterId1 = e434e611-eba0-4980-b0a1-a4d6ab26fd49
+@characterId2 = e434e611-eba0-4980-b0a1-a4d6ab26fd49
 
 ###
 
@@ -124,15 +124,10 @@ Authorization: Bearer {{token}}
 ### PASO 4: TEST DEL NUEVO ENDPOINT - Obtener última batalla
 ### ============================================
 
-### Obtener última batalla del personaje 1 (retador)
+### Obtener última batalla del personaje 1 
 GET {{baseURL}}/api/battle/last/{{characterId1}}
 Authorization: Bearer {{token}}
 
-###
-
-### Obtener última batalla del personaje 2 (retado)
-GET {{baseURL}}/api/battle/last/{{characterId2}}
-Authorization: Bearer {{token}}
 
 ###
 
