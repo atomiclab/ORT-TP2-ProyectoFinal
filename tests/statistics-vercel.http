@@ -90,3 +90,15 @@ Content-Type: {{contentType}}
 ###   "message": "Estadísticas obtenidas exitosamente"
 ### }
 ###
+
+
+### Este endpoint es público y no requiere autenticación
+GET {{baseURL}}/api/statistics
+Content-Type: {{contentType}}
+
+###
+
+### Test: Verificar que el endpoint devuelve estructura correcta
+### Debe incluir: totales, leaderboard, razas, clases, reinos, guilds, metricas
+GET {{baseURL}}/api/statistics
+Content-Type: {{contentType}}

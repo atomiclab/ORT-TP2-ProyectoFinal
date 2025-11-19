@@ -9,6 +9,8 @@
 ### ============================================
 
 ### Obtener todas las estadísticas públicas del sistema
+
+
 ### Este endpoint es público y no requiere autenticación
 GET {{baseURL}}/api/statistics
 Content-Type: {{contentType}}
@@ -90,3 +92,15 @@ Content-Type: {{contentType}}
 ###   "message": "Estadísticas obtenidas exitosamente"
 ### }
 ###
+
+
+### Test: Obtener top 5 usuarios con más batallas
+
+GET {{baseURL}}/api/statistics/top-users-battles
+Content-Type: {{contentType}}
+
+### Test: Obtener cantidad de batallas por día en los últimos 7 días
+
+GET {{baseURL}}/api/statistics/battles/by-day
+Content-Type: {{contentType}}
+
