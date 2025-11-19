@@ -3,8 +3,8 @@
 @contentType = application/json
 
 ### Variables (actualizar después de ejecutar los pasos previos)
-@token = 
-@characterId1 = 
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NWQyNzZmZC00NTRiLTQwNmMtODJkZi00MGNjOWQ1Y2ZjNGQiLCJlbWFpbCI6Imd1ZXJyZXJvQHRlc3QuY29tIiwibm9tYnJlIjoiR3VlcnJlcm8gZGUgQmF0YWxsYSIsImlhdCI6MTc2MzU4ODA1OSwiZXhwIjoxNzYzNTkxNjU5fQ.QrZZTcEOUTh50yINk4hWivW7RgenuQsNIhkLAY6XT-s
+@characterId1 = 0dda5caa-dbb7-4306-9e0a-a459e64c90c7
 @characterId2 = 
 
 ###
@@ -33,7 +33,7 @@ POST {{baseURL}}/api/auth/login
 Content-Type: {{contentType}}
 
 {
-  "email": "guerrero@test.com",
+  "email": "lucas@gmail.com",
   "password": "123456"
 }
 
