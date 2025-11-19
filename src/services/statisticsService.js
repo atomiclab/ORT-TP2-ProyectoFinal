@@ -270,5 +270,95 @@ export const statisticsService = {
 				details: error.message,
 			};
 		}
+
+
+
+	},
+	/**
+		 * Obtiene el top 5 de usuarios con más batallas jugadas
+		 * @returns {Promise<Object>} Top 5 usuarios con más batallas
+		 */
+	async getTopUsersByBattles() {
+		try {
+			const supabase = SupaBaseConnection.connect();
+
+			// Obtener todas las batallas y contar por usuario
+			const { data: battlesData, error: battlesError } = await supabase
+				.from("battles")
+				.select("id_personaje_retador, id_personaje_retado");
+
+			if (battlesError) throw battlesError;
+
+			// Crear un mapa para contar batallas por usuario
+			const userBattleCounts = {};
+
+			// Obtener los personajes involucrados en las batallas
+			const characterIds = new Set();
+			battlesData.forEach((battle) => {
+				if (battle.id_personaje_retador) characterIds.add(battle.id_personaje_retador);
+				if (battle.id_personaje_retado) characterIds.add(battle.id_personaje_retado);
+			});
+
+			// Obtener los usuarios asociados a los personajes
+			const { data: charactersData, error: charactersError } = await supabase
+				.from("characters")
+				.select("id, user_id")
+				.in("id", Array.from(characterIds));
+
+			if (charactersError) throw charactersError;
+
+			// Crear un mapa de character_id -> user_id
+			const characterToUser = {};
+			charactersData.forEach((char) => {
+				if (char.id && char.user_id) {
+					characterToUser[char.id] = char.user_id;
+				}
+			});
+
+			// Contar batallas por usuario
+			battlesData.forEach((battle) => {
+				const retadorUserId = characterToUser[battle.id_personaje_retador];
+				const retadoUserId = characterToUser[battle.id_personaje_retado];
+
+				if (retadorUserId) {
+					userBattleCounts[retadorUserId] = (userBattleCounts[retadorUserId] || 0) + 1;
+				}
+				if (retadoUserId) {
+					userBattleCounts[retadoUserId] = (userBattleCounts[retadoUserId] || 0) + 1;
+				}
+			});
+
+			// Obtener los datos de los usuarios y ordenar por batallas
+			const userIds = Object.keys(userBattleCounts);
+			const { data: usersData, error: usersError } = await supabase
+				.from("usuarios")
+				.select("id, nombre, email")
+				.in("id", userIds);
+
+			if (usersError) throw usersError;
+
+			// Mapear y ordenar los usuarios por total de batallas
+			const topUsers = usersData
+				.map((user) => ({
+					userId: user.id,
+					nombre: user.nombre,
+					email: user.email,
+					totalBattles: userBattleCounts[user.id],
+				}))
+				.sort((a, b) => b.totalBattles - a.totalBattles)
+				.slice(0, 5); // Top 5
+
+			return {
+				success: true,
+				data: topUsers,
+			};
+		} catch (error) {
+			console.error("Error al obtener el top de usuarios por batallas:", error);
+			return {
+				success: false,
+				error: "Error al obtener el top de usuarios por batallas",
+				details: error.message,
+			};
+		}
 	},
 };

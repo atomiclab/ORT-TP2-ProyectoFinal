@@ -32,4 +32,31 @@ export const statisticsController = {
 			});
 		}
 	},
+	async getTopUsersByBattles(_request, response) {
+		try {
+			const result = await statisticsService.getTopUsersByBattles();
+
+			if (!result.success) {
+				return response.status(500).json({
+					status: 500,
+					error: result.error,
+					details: result.details,
+					message: "No se pudieron obtener los usuarios con más batallas",
+				});
+			}
+
+			response.json({
+				status: 200,
+				data: result.data,
+				message: "Top 5 usuarios con más batallas obtenidos exitosamente",
+			});
+		} catch (error) {
+			console.error("Error al obtener el top de usuarios por batallas:", error);
+			response.status(500).json({
+				status: 500,
+				error: "Error interno del servidor",
+				message: error.message,
+			});
+		}
+	},
 };
