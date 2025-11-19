@@ -389,7 +389,143 @@ export const battlesService = {
 			};
 		}
 	},
+
+	/**
+	 * Obtiene la última batalla de un personaje específico
+	 * @param {string} characterId - ID del personaje
+	 * @param {string} userId - ID del usuario autenticado
+	 * @returns {Object} Resultado de la operación con datos de la última batalla
+	 */
+	async getLastBattle(characterId, userId) {
+		try {
+			const supabase = SupaBaseConnection.getInstance();
+
+			// 1. Verificar que el personaje existe y pertenece al usuario
+			const { data: character, error: errorCharacter } = await supabase
+				.from("characters")
+				.select("id, name, user_id")
+				.eq("id", characterId)
+				.single();
+
+			if (errorCharacter || !character) {
+				return {
+					success: false,
+					error: "Personaje no encontrado",
+					code: "CHARACTER_NOT_FOUND",
+				};
+			}
+
+			// 2. Verificar que el personaje pertenece al usuario autenticado
+			if (character.user_id !== userId) {
+				return {
+					success: false,
+					error: "No tienes permiso para ver las batallas de este personaje",
+					code: "UNAUTHORIZED",
+				};
+			}
+
+			// 3. Buscar la última batalla donde el personaje participó (como retador o retado)
+			const { data: battles, error: errorBattles } = await supabase
+				.from("battles")
+				.select(`
+					id_pelea,
+					date_time_pelea,
+					id_personaje_retador,
+					id_personaje_retado,
+					resultado_dados_personaje_retador,
+					resultado_dados_personaje_retado
+				`)
+				.or(`id_personaje_retador.eq.${characterId},id_personaje_retado.eq.${characterId}`)
+				.order("date_time_pelea", { ascending: false })
+				.limit(1);
+
+			if (errorBattles) {
+				return {
+					success: false,
+					error: "Error al buscar batallas",
+					details: errorBattles.message,
+				};
+			}
+
+			if (!battles || battles.length === 0) {
+				return {
+					success: false,
+					error: "Este personaje no tiene batallas registradas",
+					code: "NO_BATTLES_FOUND",
+				};
+			}
+
+			const battle = battles[0];
+
+			// 4. Determinar si el personaje fue retador o retado
+			const wasChallenger = battle.id_personaje_retador === characterId;
+			const opponentId = wasChallenger
+				? battle.id_personaje_retado
+				: battle.id_personaje_retador;
+
+			// 5. Obtener datos del oponente
+			const { data: opponent, error: errorOpponent } = await supabase
+				.from("characters")
+				.select("id, name")
+				.eq("id", opponentId)
+				.single();
+
+			if (errorOpponent || !opponent) {
+				return {
+					success: false,
+					error: "Error al obtener información del oponente",
+					details: errorOpponent?.message,
+				};
+			}
+
+			// 6. Calcular daño recibido y daño infligido
+			const characterDice = wasChallenger
+				? battle.resultado_dados_personaje_retador
+				: battle.resultado_dados_personaje_retado;
+
+			const opponentDice = wasChallenger
+				? battle.resultado_dados_personaje_retado
+				: battle.resultado_dados_personaje_retador;
+
+			const damageReceived = opponentDice; // El daño recibido es el resultado de los dados del oponente
+			const damageDealt = characterDice; // El daño infligido es el resultado de los dados del personaje
+
+			// 7. Determinar quién ganó (mayor resultado de dados)
+			const wonBattle = characterDice > opponentDice;
+
+			// 8. Construir respuesta
+			return {
+				success: true,
+				data: {
+					battleId: battle.id_pelea,
+					dateTimePelea: battle.date_time_pelea,
+					character: {
+						id: character.id,
+						name: character.name,
+						wonBattle: wonBattle,
+						damageReceived: damageReceived,
+						damageDealt: damageDealt,
+						diceResult: characterDice,
+					},
+					opponent: {
+						id: opponent.id,
+						name: opponent.name,
+						diceResult: opponentDice,
+					},
+				},
+			};
+		} catch (error) {
+			return {
+				success: false,
+				error: "Error al obtener la última batalla",
+				details: error.message,
+			};
+		}
+	},
 };
+
+
+
 
 
 

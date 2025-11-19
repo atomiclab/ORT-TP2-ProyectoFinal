@@ -128,5 +128,93 @@ battlesRouter.post(
 	battlesController.battleCharacters,
 );
 
+/**
+ * @swagger
+ * /api/battle/last/{characterId}:
+ *   get:
+ *     summary: Obtiene el resultado de la última batalla de un personaje
+ *     tags: [Batallas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: characterId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID del personaje
+ *     responses:
+ *       200:
+ *         description: Última batalla encontrada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     battleId:
+ *                       type: string
+ *                       format: uuid
+ *                     dateTimePelea:
+ *                       type: string
+ *                       format: date-time
+ *                     character:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           format: uuid
+ *                         name:
+ *                           type: string
+ *                         wonBattle:
+ *                           type: boolean
+ *                           description: true si ganó, false si perdió
+ *                         damageReceived:
+ *                           type: integer
+ *                           description: Daño recibido en la batalla
+ *                         damageDealt:
+ *                           type: integer
+ *                           description: Daño infligido al oponente
+ *                         diceResult:
+ *                           type: integer
+ *                           description: Resultado de sus dados
+ *                     opponent:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           format: uuid
+ *                         name:
+ *                           type: string
+ *                         diceResult:
+ *                           type: integer
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: No se encontró el personaje o no tiene batallas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: No autorizado - Token inválido o faltante
+ *       500:
+ *         description: Error interno del servidor
+ */
+battlesRouter.get(
+	"/last/:characterId",
+	authMiddleware.protectRoute.bind(authMiddleware),
+	battlesController.getLastBattle,
+);
+
+
+
+
 
 

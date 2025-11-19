@@ -1,0 +1,163 @@
+### Tests para endpoints de Batallas
+@baseURL = http://localhost:3003
+@contentType = application/json
+
+### Variables (actualizar después de ejecutar los pasos previos)
+@token = 
+@characterId1 = 
+@characterId2 = 
+
+###
+
+### ============================================
+### PASO 1: Autenticación (Registrar y Login)
+### ============================================
+
+### Registrar usuario 1
+POST {{baseURL}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Guerrero de Batalla",
+  "email": "guerrero@test.com",
+  "password": "123456",
+  "edad": 28
+}
+
+### NOTA: Copia el token de la respuesta y pégalo en la variable @token arriba
+
+###
+
+### Login usuario 1
+POST {{baseURL}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "guerrero@test.com",
+  "password": "123456"
+}
+
+### NOTA: Copia el token de la respuesta y pégalo en la variable @token arriba
+
+###
+
+### ============================================
+### PASO 2: Crear personajes para las batallas
+### ============================================
+
+### Crear personaje 1 (retador)
+POST {{baseURL}}/api/characters
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "userId":"55d276fd-454b-406c-82df-40cc9d5cfc4d",
+  "name": "Thorin Escudo de Hierro",
+  "avatar": "https://example.com/thorin.jpg",
+  "race": "enano",
+  "class_name": "guerrero",
+  "guild": "Los Martillos de Fuego",
+  "hp": 150,
+  "shield": 50,
+  "level": 10,
+  "kingdom": "Reino del Norte"
+}
+
+### NOTA: Copia el "id" del personaje creado y pégalo en @characterId1
+
+###
+
+### Crear personaje 2 (retado) - Necesitas crear otro usuario o usar otro personaje existente
+POST {{baseURL}}/api/characters
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "userId":"55d276fd-454b-406c-82df-40cc9d5cfc4d",
+  "name": "Legolas Arquero",
+  "avatar": "https://example.com/legolas.jpg",
+  "race": "elfo",
+  "class_name": "arquero",
+  "guild": "Guardabosques",
+  "hp": 120,
+  "shield": 30,
+  "level": 9,
+  "kingdom": "Bosque Élfico"
+}
+
+### NOTA: Copia el "id" del personaje creado y pégalo en @characterId2
+
+###
+
+### Poner personajes en línea
+PATCH {{baseURL}}/api/characters/{{characterId1}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "is_online": true
+}
+
+###
+
+PATCH {{baseURL}}/api/characters/{{characterId2}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "is_online": true
+}
+
+###
+
+### ============================================
+### PASO 3: Ejecutar batalla
+### ============================================
+
+### Iniciar batalla entre dos personajes
+POST {{baseURL}}/api/battle/{{characterId1}}/{{characterId2}}
+Authorization: Bearer {{token}}
+
+###
+
+### ============================================
+### PASO 4: TEST DEL NUEVO ENDPOINT - Obtener última batalla
+### ============================================
+
+### Obtener última batalla del personaje 1 (retador)
+GET {{baseURL}}/api/battle/last/{{characterId1}}
+Authorization: Bearer {{token}}
+
+###
+
+### Obtener última batalla del personaje 2 (retado)
+GET {{baseURL}}/api/battle/last/{{characterId2}}
+Authorization: Bearer {{token}}
+
+###
+
+### ============================================
+### Tests de Errores
+### ============================================
+
+### Test: Intentar obtener última batalla sin token (debe fallar con 401)
+GET {{baseURL}}/api/battle/last/{{characterId1}}
+
+###
+
+### Test: Intentar obtener última batalla de personaje inexistente (debe fallar con 404)
+GET {{baseURL}}/api/battle/last/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+###
+
+### Test: Intentar batalla sin autenticación (debe fallar con 401)
+POST {{baseURL}}/api/battle/{{characterId1}}/{{characterId2}}
+
+###
+
+### Test: Intentar batalla con mismo personaje (debe fallar con 400)
+POST {{baseURL}}/api/battle/{{characterId1}}/{{characterId1}}
+Authorization: Bearer {{token}}
+
+###

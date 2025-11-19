@@ -69,7 +69,62 @@ export const battlesController = {
 			});
 		}
 	},
+
+	/**
+	 * GET /api/battle/last/:characterId
+	 * Obtiene el resultado de la última batalla de un personaje
+	 */
+	async getLastBattle(request, response) {
+		try {
+			const { characterId } = request.params;
+			const userId = request.user.userId;
+
+			if (!characterId) {
+				return response.status(400).json({
+					status: 400,
+					error: "Datos incompletos",
+					message: "Se requiere el ID del personaje",
+				});
+			}
+
+			const result = await battlesService.getLastBattle(characterId, userId);
+
+			if (!result.success) {
+				const statusCode =
+					result.code === "CHARACTER_NOT_FOUND"
+						? 404
+						: result.code === "NO_BATTLES_FOUND"
+							? 404
+							: result.code === "UNAUTHORIZED"
+								? 403
+								: 500;
+
+				return response.status(statusCode).json({
+					status: statusCode,
+					error: result.error,
+					code: result.code,
+					message: result.error,
+				});
+			}
+
+			response.status(200).json({
+				status: 200,
+				data: result.data,
+				message: "Última batalla obtenida exitosamente",
+			});
+		} catch (error) {
+			console.error("Error al obtener última batalla:", error);
+			response.status(500).json({
+				status: 500,
+				error: "Error interno del servidor",
+				message: error.message,
+			});
+		}
+	},
 };
+
+
+
 
 
 
