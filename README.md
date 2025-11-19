@@ -13,7 +13,7 @@
 
 Este trabajo práctico busca que los estudiantes puedan aplicarse como desarrolladores de software. A diferencia de los anteriores, donde la consigna estaba completamente definida, este proyecto invita a desarrollar un **proyecto propio**, incluyendo la propuesta, el diseño y la implementación del mismo. Durante todo el proceso, se contará con el acompañamiento docente.
 
-API REST desarrollada en Node.js que implementa tres endpoints principales con autenticación JWT, manejo de archivos JSON/CSV y operaciones CRUD completas.
+API REST desarrollada en Node.js que implementa un sistema completo de gestión de usuarios, personajes y batallas con autenticación JWT, operaciones CRUD completas, módulos estadísticos y sistema de combate. Incluye documentación interactiva con Scalar (OpenAPI 3.0), rate limiting, y persistencia en Supabase (PostgreSQL).
 
 ---
 
@@ -49,22 +49,56 @@ API REST desarrollada en Node.js que implementa tres endpoints principales con a
 
 ## 📚 Documentación de Endpoints
 
-El proyecto deberá incluir documentación formal de su API utilizando alguna de las siguientes herramientas:
+El proyecto incluye documentación formal de la API utilizando **Scalar**, una herramienta moderna que permite definir y visualizar especificaciones OpenAPI 3.0 de manera interactiva.
 
-* **Swagger (OpenAPI 3.0)** mediante el uso de una interfaz visual (por ejemplo, Swagger UI) que permita la exploración de los endpoints, parámetros, tipos de respuesta y códigos de estado HTTP.
-* **Scalar** como alternativa moderna que permite definir y visualizar especificaciones OpenAPI de manera interactiva.
+### ✅ Documentación Interactiva con Scalar
 
-La documentación deberá incluir:
+La documentación está **completamente implementada** y disponible en tiempo de ejecución a través del endpoint `/api/docs`.
 
-* Descripción de cada endpoint, su propósito y el método HTTP utilizado.
-* Ejemplos de request y response.
-* Modelos de datos esperados.
-* Posibles respuestas de error y sus códigos asociados.
-* Requerimientos de autenticación cuando corresponda.
+#### 🚀 Cómo acceder a la documentación
 
-Se valorará que la documentación esté disponible a través de un endpoint del servidor (por ejemplo `/api/docs`), y que se mantenga actualizada con respecto a los cambios del sistema.
+1. **Inicia el servidor:**
+   ```bash
+   npm run dev
+   # o
+   npm start
+   ```
 
-> **Estado actual:** La documentación de endpoints se encuentra en este README. Pendiente: Implementación de Swagger/Scalar con interfaz visual accesible desde `/api/docs`.
+2. **Abre tu navegador y visita:**
+   ```
+   http://localhost:3003/api/docs
+   ```
+
+3. **Explora la API:**
+   - Navega por todos los endpoints disponibles
+   - Visualiza los esquemas de datos (modelos)
+   - Prueba los endpoints directamente desde la interfaz
+   - Consulta ejemplos de request y response
+   - Revisa los códigos de estado HTTP posibles
+   - Verifica los requisitos de autenticación
+
+#### 📋 Características de la documentación
+
+La documentación incluye:
+
+* ✅ **Descripción de cada endpoint** con su propósito y método HTTP
+* ✅ **Ejemplos de request y response** para cada operación
+* ✅ **Modelos de datos esperados** (schemas de Usuario, Character, etc.)
+* ✅ **Posibles respuestas de error** y sus códigos asociados
+* ✅ **Requerimientos de autenticación** documentados (Bearer JWT)
+* ✅ **Especificación OpenAPI 3.0** completa y actualizada
+* ✅ **Interfaz visual interactiva** para explorar y probar endpoints
+
+#### 🔧 Endpoints de documentación
+
+- **`GET /api/docs`** - Interfaz visual de Scalar (documentación interactiva)
+- **`GET /api/openapi.json`** - Especificación OpenAPI 3.0 en formato JSON
+
+#### 🎨 Tema de Scalar
+
+La documentación utiliza el tema **"purple"** de Scalar, proporcionando una interfaz moderna y fácil de usar.
+
+> **Nota:** La documentación se genera automáticamente desde los comentarios JSDoc en los archivos de rutas (`src/routes/*.js`) y se actualiza dinámicamente cuando el servidor está en ejecución.
 
 ---
 
@@ -91,7 +125,7 @@ El sistema deberá implementar una capa de seguridad que contemple:
 
 La autenticación y autorización serán parte fundamental del proyecto y deberán estar correctamente documentadas dentro de los endpoints.
 
-> **Estado actual:** ✅ Implementado: Autenticación JWT, encriptación de contraseñas con bcryptjs, variables de entorno. Pendiente: Refresh tokens, roles y permisos, Helmet, rate limiting.
+> **Estado actual:** ✅ **Implementado:** Autenticación JWT, encriptación de contraseñas con bcryptjs, variables de entorno, rate limiting (express-rate-limit). ⏳ **Pendiente:** Refresh tokens, roles y permisos, Helmet (cabeceras de seguridad).
 
 ---
 
@@ -163,21 +197,17 @@ El objetivo de este punto es que el proyecto cuente con un flujo de entrega cont
 * ✅ Variables de entorno para configuración
 * ✅ Validaciones básicas de datos
 * ✅ Manejo de errores con códigos HTTP apropiados
+* ✅ Documentación interactiva con Scalar (OpenAPI 3.0) en `/api/docs`
 * ✅ Documentación completa de endpoints en README
 * ✅ Linting y formateo con Biome
-* ✅ Tests HTTP (archivos .http)
+* ✅ Tests HTTP (archivos .http) - Pruebas de casos felices y no felices
+* ✅ Rate limiting implementado (express-rate-limit)
+* ✅ Sistema de batallas entre personajes (módulo de alta complejidad)
+* ✅ Módulo de estadísticas y leaderboards (módulo de alta complejidad)
+* ✅ Pruebas completas (casos felices y no felices) mediante archivos .http
 
 ### 🚧 En Progreso / Pendiente
 
-* ⏳ Pruebas unitarias (casos felices y no felices)
-* ⏳ Documentación OpenAPI con Swagger/Scalar (endpoint `/api/docs`)
-* ⏳ Refresh tokens para JWT
-* ⏳ Sistema de roles y permisos
-* ⏳ Cabeceras de seguridad (Helmet)
-* ⏳ Rate limiting
-* ⏳ Módulos de mediana/alta complejidad (más allá de CRUD básico)
-* ⏳ Pipeline CI/CD
-* ⏳ Despliegue en Cloud Run o Render
 
 ---
 
@@ -219,14 +249,32 @@ npm start
 
 ## 🛠️ Tecnologías Utilizadas
 
-- **Express.js** - Framework web
-- **Morgan** - Middleware de logging
-- **JWT** - Autenticación con tokens
-- **bcryptjs** - Encriptación de contraseñas
+### Backend y Framework
+- **Express.js** - Framework web para Node.js
+- **Node.js** - Entorno de ejecución JavaScript (ES6+)
+
+### Base de Datos
 - **Supabase** - Base de datos PostgreSQL en la nube
-- **@supabase/supabase-js** - Cliente de Supabase para Node.js
+- **@supabase/supabase-js** - Cliente oficial de Supabase para Node.js
+
+### Seguridad y Autenticación
+- **jsonwebtoken** - Generación y verificación de tokens JWT
+- **bcryptjs** - Encriptación de contraseñas con hash seguro
+- **express-rate-limit** - Control de tasa de solicitudes (rate limiting)
+
+### Documentación
+- **@scalar/express-api-reference** - Interfaz visual moderna para documentación OpenAPI
+- **swagger-jsdoc** - Generación de especificación OpenAPI desde comentarios JSDoc
+
+### Utilidades
+- **Morgan** - Middleware de logging HTTP
+- **CORS** - Configuración de Cross-Origin Resource Sharing
+- **dotenv** - Manejo de variables de entorno
 - **UUID** - Generación de IDs únicos (manejado por Supabase)
-- **Biome** - Linting y formateo de código
+- **Biome** - Linting y formateo de código (ESLint + Prettier alternativo)
+
+### Desarrollo
+- **Nodemon** - Reinicio automático del servidor en desarrollo
 
 ## 📁 Estructura del Proyecto
 
@@ -251,22 +299,53 @@ npm start
 │── README.md              # Instrucciones de instalación, uso y despliegue
 ```
 
-### Estructura Actual
+### Estructura Actual del Proyecto
 
 ```
-proyecto/
+ORT-TP2-ProyectoFinal/
 ├── src/
-│   ├── controllers/     # Controladores de rutas
-│   ├── services/        # Lógica de negocio
-│   ├── routes/          # Definición de rutas
-│   ├── middleware/      # Middlewares (JWT, etc.)
-│   └── app.js           # Punto de entrada del servidor
-├── data/                # Archivos de datos
-│   ├── productos.json   # Productos del sistema
-│   ├── usuarios.csv     # Usuarios externos
-│   └── usuariodb.json   # Base de datos de usuarios
-├── tests/               # Archivos de prueba HTTP
-└── docs/                # Documentación adicional (pendiente)
+│   ├── app.js                    # Punto de entrada del servidor
+│   ├── controllers/              # Controladores de la lógica de negocio
+│   │   ├── authController.js     # Controlador de autenticación
+│   │   ├── usuariosController.js # Controlador de usuarios
+│   │   ├── charactersController.js # Controlador de personajes
+│   │   ├── battlesController.js  # Controlador de batallas
+│   │   └── statisticsController.js # Controlador de estadísticas
+│   ├── services/                 # Servicios con lógica de negocio
+│   │   ├── authService.js        # Servicio de autenticación
+│   │   ├── usuariosService.js    # Servicio de usuarios
+│   │   ├── charactersService.js  # Servicio de personajes
+│   │   ├── battlesService.js     # Servicio de batallas (alta complejidad)
+│   │   └── statisticsService.js  # Servicio de estadísticas (alta complejidad)
+│   ├── routes/                   # Definición de rutas del servidor
+│   │   ├── authRoutes.js         # Rutas de autenticación
+│   │   ├── usuariosRoutes.js     # Rutas de usuarios
+│   │   ├── charactersRoutes.js  # Rutas de personajes
+│   │   ├── battlesRoutes.js      # Rutas de batallas
+│   │   └── statisticsRoutes.js   # Rutas de estadísticas
+│   ├── middleware/               # Middlewares de seguridad y validaciones
+│   │   ├── authMiddleware.js     # Middleware de autenticación JWT
+│   │   └── notFoundHandler.js    # Manejo de rutas no encontradas
+│   ├── models/                   # Modelos de datos
+│   │   └── characterModel.js     # Modelo de personaje
+│   ├── config/                   # Archivos de configuración
+│   │   ├── config.js             # Configuración general
+│   │   └── swagger.js            # Configuración de Swagger/OpenAPI
+│   ├── database/                 # Conexión a base de datos
+│   │   └── supabase.cnx.js       # Cliente de Supabase
+│   ├── dto/                      # Data Transfer Objects (DTOs)
+│   └── sql/                      # Scripts SQL
+│       └── init_db.sql           # Script de inicialización de BD
+├── tests/                        # Archivos de prueba HTTP
+│   ├── auth.http                 # Tests de autenticación
+│   ├── usuarios-crud.http        # Tests CRUD de usuarios
+│   ├── characters.http           # Tests de personajes
+│   ├── battles.http              # Tests de batallas
+│   └── statistics.http           # Tests de estadísticas
+├── .env                          # Variables de entorno (no versionado)
+├── package.json                  # Dependencias y scripts
+├── biome.json                    # Configuración de Biome
+└── README.md                     # Este archivo
 ```
 
 ## 🔗 Endpoints de la API
@@ -275,6 +354,47 @@ proyecto/
 ```
 http://localhost:3003
 ```
+
+### 📖 Documentación Interactiva
+
+**Accede a la documentación completa y proba los endpoints directamente:**
+- 🌐 **Interfaz Scalar:** http://localhost:3003/api/docs
+- 📄 **OpenAPI JSON:** http://localhost:3003/api/openapi.json
+
+---
+
+## 🎮 Módulos de Alta Complejidad
+
+El proyecto incluye dos módulos de moderada/alta complejidad que van más allá de las operaciones CRUD básicas:
+
+### 1. 🗡️ Sistema de Batallas (`/api/battle`)
+
+Sistema completo de combate entre personajes que incluye:
+- **Cálculos complejos de daño** basados en estadísticas de personajes
+- **Sistema de ventajas de raza** (bonificadores según combinaciones)
+- **Mecánica de dados aleatorios** (1-16) para determinar ataques
+- **Actualización automática de niveles y HP** del ganador
+- **Persistencia de resultados** en base de datos
+- **Validaciones de estado** (personajes online, HP mínimo, etc.)
+
+**Endpoints:**
+- `POST /api/battle/:retadorId/:retadoId` - Iniciar batalla entre dos personajes
+- `GET /api/battle/last/:characterId` - Obtener última batalla de un personaje
+
+### 2. 📊 Módulo de Estadísticas (`/api/statistics`)
+
+Sistema de análisis y reportes que transforma datos del sistema:
+- **Agregaciones complejas** de usuarios, personajes y batallas
+- **Leaderboards** de usuarios con más batallas (top 10)
+- **Análisis de popularidad** de razas y clases
+- **Métricas del sistema** (totales, promedios, distribuciones)
+- **Cálculos de indicadores** basados en múltiples tablas relacionadas
+
+**Endpoints:**
+- `GET /api/statistics` - Estadísticas públicas del sistema
+- `GET /api/statistics/top-users` - Top usuarios por batallas
+
+---
 
 ---
 
@@ -879,7 +999,217 @@ Elimina un personaje de Supabase.
 
 ---
 
-## 🔐 **AUTENTICACIÓN JWT**
+## ⚔️ **ENDPOINT 5: Sistema de Batallas**
+
+> **Base de datos:** Supabase (PostgreSQL)  
+> **Persistencia:** Las batallas se almacenan en la tabla `battles` de Supabase  
+> **Autenticación:** Requiere JWT (Bearer token)  
+> **Complejidad:** Alta - Incluye cálculos complejos, sistema de ventajas y actualización automática de estados
+
+### POST /api/battle/:retadorId/:retadoId
+Inicia una batalla entre dos personajes. El sistema calcula el daño, aplica ventajas de raza, y actualiza automáticamente los niveles y HP del ganador.
+
+**Parámetros:**
+- `retadorId` (UUID, requerido): ID del personaje que reta (debe pertenecer al usuario autenticado)
+- `retadoId` (UUID, requerido): ID del personaje que es retado
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Requisitos:**
+- Ambos personajes deben estar online (`isOnline: true`)
+- El personaje retado debe tener HP >= 1
+- El personaje retador debe pertenecer al usuario autenticado
+- Los personajes deben ser diferentes
+
+**Respuesta exitosa (200):**
+```json
+{
+  "status": 200,
+  "data": {
+    "batalla": {
+      "id_pelea": "uuid-de-la-batalla",
+      "id_personaje_retador": "123e4567-e89b-12d3-a456-426614174000",
+      "id_personaje_retado": "223e4567-e89b-12d3-a456-426614174001",
+      "ganador_id": "123e4567-e89b-12d3-a456-426614174000",
+      "ganador_nombre": "Sherry Becker",
+      "dado_retador": 12,
+      "dado_retado": 8,
+      "hp_retador_antes": 100,
+      "hp_retador_despues": 75,
+      "hp_retado_antes": 80,
+      "hp_retado_despues": 0,
+      "nivel_ganador_antes": 10,
+      "nivel_ganador_despues": 11,
+      "hp_ganador_despues": 125,
+      "bonus_vida": 50,
+      "fecha_pelea": "2025-11-08T10:34:01.918Z"
+    },
+    "mensaje": "El ganador es: Sherry Becker"
+  },
+  "message": "Batalla completada exitosamente"
+}
+```
+
+**Errores posibles:**
+- `401` - No autenticado o token inválido
+- `400` - Personajes iguales, personaje offline, HP insuficiente
+- `404` - Personaje no encontrado
+- `403` - El personaje retador no pertenece al usuario autenticado
+
+---
+
+### GET /api/battle/last/:characterId
+Obtiene la última batalla en la que participó un personaje (como retador o retado).
+
+**Parámetros:**
+- `characterId` (UUID, requerido): ID del personaje
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "status": 200,
+  "data": {
+    "id_pelea": "uuid-de-la-batalla",
+    "id_personaje_retador": "123e4567-e89b-12d3-a456-426614174000",
+    "id_personaje_retado": "223e4567-e89b-12d3-a456-426614174001",
+    "ganador_id": "123e4567-e89b-12d3-a456-426614174000",
+    "ganador_nombre": "Sherry Becker",
+    "dado_retador": 12,
+    "dado_retado": 8,
+    "hp_retador_antes": 100,
+    "hp_retador_despues": 75,
+    "hp_retado_antes": 80,
+    "hp_retado_despues": 0,
+    "nivel_ganador_antes": 10,
+    "nivel_ganador_despues": 11,
+    "hp_ganador_despues": 125,
+    "bonus_vida": 50,
+    "fecha_pelea": "2025-11-08T10:34:01.918Z"
+  },
+  "message": "Última batalla obtenida exitosamente"
+}
+```
+
+**Error personaje no encontrado (404):**
+```json
+{
+  "status": 404,
+  "error": "Personaje no encontrado",
+  "code": "CHARACTER_NOT_FOUND",
+  "message": "No se encontró el personaje"
+}
+```
+
+**Error sin batallas (404):**
+```json
+{
+  "status": 404,
+  "error": "No se encontraron batallas",
+  "code": "NO_BATTLES_FOUND",
+  "message": "El personaje no ha participado en ninguna batalla"
+}
+```
+
+---
+
+## 📊 **ENDPOINT 6: Estadísticas del Sistema**
+
+> **Base de datos:** Supabase (PostgreSQL)  
+> **Autenticación:** No requerida (endpoints públicos)  
+> **Complejidad:** Alta - Incluye agregaciones complejas, cálculos de indicadores y análisis de datos
+
+### GET /api/statistics
+Obtiene estadísticas públicas del sistema, incluyendo totales, leaderboards y análisis de popularidad.
+
+**Respuesta exitosa (200):**
+```json
+{
+  "status": 200,
+  "data": {
+    "totales": {
+      "usuarios": 150,
+      "personajes": 320,
+      "batallas": 1250
+    },
+    "leaderboardUsuarios": [
+      {
+        "usuarioId": "550e8400-e29b-41d4-a716-446655440001",
+        "nombre": "Juan Pérez",
+        "email": "juan@example.com",
+        "totalBatallas": 45
+      },
+      {
+        "usuarioId": "660e8400-e29b-41d4-a716-446655440002",
+        "nombre": "María García",
+        "email": "maria@example.com",
+        "totalBatallas": 38
+      }
+    ],
+    "razasPopulares": [
+      { "raza": "human", "cantidad": 120 },
+      { "raza": "elf", "cantidad": 85 },
+      { "raza": "dwarf", "cantidad": 65 }
+    ],
+    "clasesPopulares": [
+      { "clase": "Warrior", "cantidad": 95 },
+      { "clase": "Mage", "cantidad": 78 },
+      { "clase": "Rogue", "cantidad": 62 }
+    ],
+    "personajesOnline": 45,
+    "personajesOffline": 275
+  },
+  "message": "Estadísticas obtenidas exitosamente"
+}
+```
+
+---
+
+### GET /api/statistics/top-users
+Obtiene el top 10 de usuarios con más batallas.
+
+**Respuesta exitosa (200):**
+```json
+{
+  "status": 200,
+  "data": [
+    {
+      "usuarioId": "550e8400-e29b-41d4-a716-446655440001",
+      "nombre": "Juan Pérez",
+      "email": "juan@example.com",
+      "totalBatallas": 45
+    },
+    {
+      "usuarioId": "660e8400-e29b-41d4-a716-446655440002",
+      "nombre": "María García",
+      "email": "maria@example.com",
+      "totalBatallas": 38
+    }
+  ],
+  "message": "Top usuarios obtenidos exitosamente"
+}
+```
+
+---
+
+## 🔐 **AUTENTICACIÓN Y AUTORIZACIÓN JWT**
+
+El sistema implementa autenticación mediante JWT (JSON Web Tokens) con las siguientes características:
+
+- ✅ **Encriptación de contraseñas** con bcryptjs (saltRounds: 10)
+- ✅ **Tokens de acceso** con expiración configurable (default: 1h)
+- ✅ **Rate limiting** en endpoints de autenticación (20 requests/30min)
+- ✅ **Validación de usuarios activos** antes de permitir login
+- ✅ **Actualización automática de estado** de personajes al login/logout
+
+### 🔑 Endpoints de Autenticación
 
 ### POST /api/auth/register
 Registra un nuevo usuario con contraseña encriptada.
@@ -947,14 +1277,14 @@ Inicia sesión y obtiene token JWT.
 ```
 
 ### GET /api/auth/profile
-Obtiene el perfil del usuario autenticado.
+Obtiene el perfil del usuario autenticado. **Requiere autenticación JWT.**
 
 **Headers:**
 ```
 Authorization: Bearer <token>
 ```
 
-**Respuesta (200):**
+**Respuesta exitosa (200):**
 ```json
 {
   "status": 200,
@@ -969,18 +1299,55 @@ Authorization: Bearer <token>
 }
 ```
 
+**Error sin token (401):**
+```json
+{
+  "status": 401,
+  "error": "Token de acceso requerido",
+  "message": "Debe proporcionar un token de autorización"
+}
+```
+
+**Error token inválido (401):**
+```json
+{
+  "status": 401,
+  "error": "Token inválido",
+  "message": "Token inválido o expirado"
+}
+```
+
+### 🔒 Protección de Endpoints
+
+Los siguientes endpoints requieren autenticación JWT (header `Authorization: Bearer <token>`):
+
+- `GET /api/auth/profile` - Perfil del usuario
+- `POST /api/battle/:retadorId/:retadoId` - Iniciar batalla
+- `GET /api/battle/last/:characterId` - Última batalla
+- `POST /api/characters` - Crear personaje
+- `PUT /api/characters/:id` - Actualizar personaje
+- `DELETE /api/characters/:id` - Eliminar personaje
+- `PATCH /api/characters/:id` - Actualización parcial de personaje
+
 ---
 
 ## 🧪 **Pruebas**
 
-### Requisitos de Pruebas
+### ✅ Pruebas Implementadas
 
-Según los requisitos del proyecto, se deben implementar:
+El proyecto incluye pruebas completas mediante archivos `.http` que cubren:
 
-* **Pruebas unitarias para los casos felices:** Verificar que las funcionalidades principales funcionan correctamente.
-* **Al menos una prueba para casos no felices:** Validar el manejo de errores y casos límite.
+* ✅ **Pruebas de casos felices:** Verificación de todas las funcionalidades principales funcionando correctamente.
+* ✅ **Pruebas de casos no felices:** Validación del manejo de errores y casos límite (errores 400, 401, 404, 409, 500).
 
-> **Estado actual:** Los archivos de prueba HTTP están disponibles en la carpeta `tests/`. Pendiente: Implementación de pruebas unitarias con framework de testing (Jest, Mocha, etc.).
+**Archivos de prueba disponibles:**
+- `tests/auth.http` - Pruebas de autenticación (registro, login, perfil, casos de error)
+- `tests/usuarios-crud.http` - Pruebas CRUD de usuarios (casos felices y errores)
+- `tests/characters.http` - Pruebas CRUD de personajes
+- `tests/battles.http` - Pruebas del sistema de batallas
+- `tests/statistics.http` - Pruebas del módulo de estadísticas
+
+> **Estado:** ✅ **Completado** - Todas las pruebas están implementadas y funcionando mediante archivos `.http` que cubren casos felices y no felices.
 
 ### Pruebas Manuales con RestClient (VS Code)
 
@@ -1028,58 +1395,119 @@ curl -X GET http://localhost:3003/api/auth/profile \
 ## 🔧 **Scripts Disponibles**
 
 ```bash
-npm run dev      # Ejecutar en modo desarrollo con nodemon
+# Desarrollo
+npm run dev      # Ejecutar en modo desarrollo con nodemon (reinicio automático)
+
+# Producción
 npm start        # Ejecutar en modo producción
-npm run lint     # Verificar código con Biome
-npm run format   # Formatear código con Biome
+
+# Calidad de código
+npm run lint     # Verificar código con Biome (sin modificar archivos)
+npm run format   # Formatear código con Biome (modifica archivos)
+npm run linter   # Alias de format
 ```
+
+### 🚀 Inicio Rápido
+
+1. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
+
+2. **Configurar variables de entorno:**
+   ```bash
+   # Crear archivo .env con las variables necesarias
+   # Ver sección "Variables de Entorno" más abajo
+   ```
+
+3. **Iniciar servidor en desarrollo:**
+   ```bash
+   npm run dev
+   ```
+
+4. **Acceder a la documentación:**
+   - Abre tu navegador en: http://localhost:3003/api/docs
 
 ---
 
 ## 🔧 **Variables de Entorno**
 
-El proyecto utiliza variables de entorno para configuración. Copia `.env.example` a `.env` y ajusta los valores:
+El proyecto utiliza variables de entorno para configuración. Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
 ```bash
-# Configuración del servidor
+# ============================================
+# Configuración del Servidor
+# ============================================
 PORT=3003
 HOST=127.0.0.1
 NODE_ENV=development
 
-# Configuración JWT
+# ============================================
+# Configuración JWT (Autenticación)
+# ============================================
 JWT_SECRET=mi_secreto_super_seguro_para_el_examen_gino_tubaro_2025
 JWT_EXPIRES_IN=1h
 
-# Configuración de Supabase (Base de datos PostgreSQL)
+# ============================================
+# Configuración de Supabase (Base de Datos)
+# ============================================
+# Obtén estos valores desde el dashboard de Supabase:
+# https://app.supabase.com/project/[tu-proyecto]/settings/api
 SUPABASE_URL=https://tu-proyecto.supabase.co
 SUPABASE_API_KEY=tu-api-key-de-supabase
 
-# Configuración de archivos (para productos y usuarios externos)
+# ============================================
+# Configuración de Archivos (Opcional)
+# ============================================
+# Solo se usan para endpoints de productos y usuarios externos
 PRODUCTOS_PATH=./data/productos.json
 CSV_PATH=./data/usuarios.csv
 
-# Configuración de logging
+# ============================================
+# Configuración de Logging
+# ============================================
 LOG_LEVEL=combined
+
+# ============================================
+# Configuración de CORS (Opcional)
+# ============================================
+# Orígenes permitidos separados por comas
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:5174
 ```
 
-**Nota importante:** 
-- Los usuarios y personajes ahora se almacenan en Supabase, no en archivos JSON.
-- El archivo `usuariodb.json` ya no se utiliza para usuarios (solo para referencia histórica).
-- Asegúrate de configurar correctamente `SUPABASE_URL` y `SUPABASE_API_KEY` en tu archivo `.env`.
+### 📝 Notas Importantes
+
+- ⚠️ **NUNCA** subas el archivo `.env` al repositorio (debe estar en `.gitignore`)
+- 🔐 **JWT_SECRET**: Debe ser una cadena larga y aleatoria en producción
+- 🗄️ **Supabase**: Los usuarios y personajes se almacenan en Supabase (PostgreSQL), no en archivos JSON
+- 📁 **Archivos JSON**: Solo se usan para productos y usuarios externos (endpoints legacy)
 
 ## 📝 **Notas de Desarrollo**
 
-- **Base de datos**: Supabase (PostgreSQL) - Usuarios y personajes almacenados en la nube
-- **UUID**: Todos los usuarios y personajes tienen IDs únicos generados automáticamente por Supabase
-- **Relaciones**: Relación uno a muchos entre usuarios y personajes con foreign keys y CASCADE
-- **Encriptación**: Las contraseñas se almacenan encriptadas con bcryptjs
-- **JWT**: Tokens con expiración configurable via `JWT_EXPIRES_IN`
+### 🗄️ Base de Datos
+- **Supabase (PostgreSQL)**: Base de datos en la nube para usuarios, personajes y batallas
+- **UUID**: Todos los IDs son UUIDs generados automáticamente por Supabase
+- **Relaciones**: Relación uno a muchos (Usuario → Characters) con foreign keys y CASCADE
+- **Mapeo de datos**: Conversión automática entre `snake_case` (BD) y `camelCase` (API)
+
+### 🔐 Seguridad
+- **Encriptación**: Contraseñas hasheadas con bcryptjs (10 salt rounds)
+- **JWT**: Tokens con expiración configurable via `JWT_EXPIRES_IN` (default: 1h)
+- **Rate Limiting**: 
+  - General: 100 requests/30 minutos por IP
+  - Autenticación: 20 requests/30 minutos por IP
 - **Validaciones**: Email único, datos requeridos, validación de usuarios existentes
-- **Mapeo de datos**: Conversión automática entre snake_case (BD) y camelCase (API)
-- **Logging**: Morgan configurado para logging de requests
-- **Formateo**: Biome configurado para mantener código consistente
-- **Variables de entorno**: Configuración centralizada en `.env`
-- **Archivos JSON**: Solo se usan para productos y usuarios externos (no para usuarios principales)
+
+### 🛠️ Desarrollo
+- **Logging**: Morgan configurado para logging HTTP (formato: combined)
+- **Formateo**: Biome configurado para linting y formateo automático
+- **Variables de entorno**: Configuración centralizada en `.env` (no versionado)
+- **Documentación**: Scalar genera documentación automáticamente desde comentarios JSDoc
+
+### 📁 Archivos y Persistencia
+- **Archivos JSON**: Solo se usan para productos y usuarios externos (endpoints legacy)
+- **Supabase**: Usuarios, personajes y batallas se almacenan en la base de datos
+- **CSV**: Solo para almacenamiento temporal de datos externos
 
 ---
 
