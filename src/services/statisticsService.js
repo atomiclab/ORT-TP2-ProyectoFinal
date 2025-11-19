@@ -361,4 +361,45 @@ export const statisticsService = {
 			};
 		}
 	},
+	/**
+		 * Obtiene la cantidad de batallas por día en los últimos 7 días
+		 * @returns {Promise<Object>} Cantidad de batallas por día
+		 */
+	async getBattlesByDay() {
+		try {
+			const supabase = SupaBaseConnection.connect();
+
+			// Obtener batallas agrupadas por fecha en los últimos 7 días
+			const { data, error } = await supabase
+				.from("battles")
+				.select("date_time_pelea")
+				.gte("date_time_pelea", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
+			if (error) throw error;
+
+			// Agrupar batallas por día
+			const battlesByDay = {};
+			data.forEach((battle) => {
+				const date = new Date(battle.date_time_pelea).toISOString().split("T")[0];
+				battlesByDay[date] = (battlesByDay[date] || 0) + 1;
+			});
+
+			// Convertir el objeto en un array ordenado por fecha
+			const result = Object.entries(battlesByDay)
+				.map(([date, count]) => ({ date, count }))
+				.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+			return {
+				success: true,
+				data: result,
+			};
+		} catch (error) {
+			console.error("Error al obtener batallas por día:", error);
+			return {
+				success: false,
+				error: "Error al obtener batallas por día",
+				details: error.message,
+			};
+		}
+	},
 };

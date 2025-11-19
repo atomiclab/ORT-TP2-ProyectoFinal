@@ -183,3 +183,45 @@ statisticsRouter.get("/", statisticsController.getStatistics); // GET /api/stati
  *               $ref: '#/components/schemas/Error'
  */
 statisticsRouter.get("/top-users-battles", statisticsController.getTopUsersByBattles); // GET /api/statistics/top-users-battles
+
+/**
+ * @swagger
+ * /api/statistics/battles/by-day:
+ *   get:
+ *     summary: Cantidad de batallas por día en los últimos 7 días
+ *     description: Devuelve la cantidad de batallas realizadas por día en los últimos 7 días
+ *     tags: [Estadísticas]
+ *     responses:
+ *       200:
+ *         description: Cantidad de batallas por día obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       date:
+ *                         type: string
+ *                         format: date
+ *                         example: "2025-11-12"
+ *                       count:
+ *                         type: integer
+ *                         example: 15
+ *                 message:
+ *                   type: string
+ *                   example: "Cantidad de batallas por día obtenida exitosamente"
+ *       500:
+ *         description: Error al obtener estadísticas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+statisticsRouter.get("/battles/by-day", statisticsController.getBattlesByDay); // GET /api/statistics/battles/by-day
